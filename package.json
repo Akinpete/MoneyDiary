@@ -2,7 +2,7 @@
   "name": "moneydiary",
   "version": "1.0.0",
   "description": "## 🌟 About MoneyDiary is an AI-powered financial assistant designed to help users log and query their transactions seamlessly. Using natural language processing (NLP), MoneyDiary extracts transaction details from user inputs and stores them in a structured database. Users can ask questions about their transaction history, and MoneyDiary will retrieve relevant information using vector-based search for accurate responses.",
-  "main": "index.js",
+  "main": "app.js",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

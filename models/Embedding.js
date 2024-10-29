@@ -4,9 +4,10 @@ import { DataTypes } from 'sequelize';
 
 class Embedding extends BaseModel {
   static initModel(sequelize) {
-    super.initModel(sequelize);
+    const baseAttr = super.initModel(sequelize);
 
     return this.init({
+        ...baseAttr,
       data: {
         type: DataTypes.VECTOR(3), // 3-dimensional vector
         allowNull: false
@@ -22,7 +23,9 @@ class Embedding extends BaseModel {
       }
     }, {
       sequelize,
-      modelName: 'Embedding'
+      modelName: 'Embedding',
+      timestamps: false,
+      freezeTableName: true
     });
   }
 

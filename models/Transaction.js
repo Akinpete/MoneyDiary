@@ -3,9 +3,10 @@ import { DataTypes } from 'sequelize';
 
 class Transaction extends BaseModel {
   static initModel(sequelize) {
-    super.initModel(sequelize);
+    const baseAttr = super.initModel(sequelize);
     
     return this.init({
+        ...baseAttr,
       transaction_text: {
         type: DataTypes.TEXT,
         allowNull: false
@@ -29,18 +30,24 @@ class Transaction extends BaseModel {
         references: {
             model: 'User',
             key: 'id'
-        }
+        },
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE'
       }      
     }, {
       sequelize,
-      modelName: 'Transaction'
+      timestamps: false,
+      modelName: 'Transaction',
+      freezeTableName: true
     });
   }
 
   static associate(models) {
     this.belongsTo(models.User, {
         foreignKey: 'user_id',
-        as: 'user'
+        as: 'user',
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE'
     });
     this.hasMany(models.Embedding, {
         foreignKey: 'transaction_id',
@@ -49,4 +56,4 @@ class Transaction extends BaseModel {
   }
 }
 
-export default Query;
+export default Transaction;
