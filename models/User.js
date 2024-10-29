@@ -6,12 +6,25 @@ class User extends BaseModel {
     super.initModel(sequelize);
     
     return this.init({
-      email: {
+      username: {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true
       },
-      // other fields...
+      telegram_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        unique: true
+      },
+      password_hash: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+        unique: true
+      },
+      currency: {
+        type: DataTypes.STRING,
+        allowNull: true
+      }      
     }, {
       sequelize,
       modelName: 'User'
@@ -20,7 +33,10 @@ class User extends BaseModel {
 
   static associate(models) {
     // Define associations
-    this.hasMany(models.Query);
+    this.hasMany(models.Transaction, {
+        foreignKey: 'user_id',
+        as: 'transactions'
+    });
   }
 }
 

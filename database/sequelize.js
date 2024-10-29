@@ -1,14 +1,17 @@
-import { Sequelize } from "sequelize";
-import config from '../config/database.js';
+import { Sequelize } from 'sequelize';
+import pgvector from 'pgvector/sequelize';
+import config from '../config/database.js';  // Your config file
+
+pgvector.registerTypes(Sequelize);  // Register the VECTOR datatype
 
 const env = process.env.NODE_ENV || 'development';
 const dbConfig = config[env];
 
 const sequelize = new Sequelize(
-    dbConfig.database,
-    dbConfig.username,
-    dbConfig.password,
-    dbConfig
+  dbConfig.database,
+  dbConfig.username,
+  dbConfig.password,
+  dbConfig
 );
 
-export default sequelize
+export default sequelize;
