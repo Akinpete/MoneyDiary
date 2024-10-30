@@ -1,12 +1,32 @@
 // src/index.js
+import express from 'express';
 import initializeDatabase from './index.js';
 import models from './models/index.js';
+import authRoutes from './routes/authRouter.js';
+
+const app = express();
+
+// middleware
+app.use(express.static('public'));
+
+//view engine
+app.set('view engine', 'ejs');
 
 async function startApplication() {
   await initializeDatabase();
-  
-  // Start your application logic here
-  console.log('Application started successfully');
+  console.log('DB Initialized successfully');
+  try {
+    app.listen(3000, () => {
+        console.log('Server is running on port 3000');
+    });
+  } catch (error) {
+    console.error('Failure to start the server', error);
+  }
 }
 
 startApplication().catch(console.error);
+
+// routes
+app.get('/', (req, res) => res.render('home'));
+app.get('/smoothies', (req, res) => res.render('smoothies'));
+app.use(authRoutes);
