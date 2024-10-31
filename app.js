@@ -1,10 +1,13 @@
 // src/index.js
+import dotenv from 'dotenv';
+dotenv.config();
 import express from 'express';
 import initializeDatabase from './index.js';
 import models from './models/index.js';
 import authRoutes from './routes/authRouter.js';
 
 const app = express();
+const PORT = process.env.PORT;
 
 // middleware
 app.use(express.static('public'));
@@ -16,7 +19,7 @@ async function startApplication() {
   await initializeDatabase();
   console.log('DB Initialized successfully');
   try {
-    app.listen(3000, () => {
+    app.listen(PORT, () => {
         console.log('Server is running on port 3000');
     });
   } catch (error) {

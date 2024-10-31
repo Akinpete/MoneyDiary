@@ -19,11 +19,11 @@ class User extends BaseModel {
             allowNull: false,
             unique: true
         },
-        password_hash: {
-            type: DataTypes.TEXT,
-            allowNull: false,
-            unique: true
-        },
+        // password_hash: {
+        //     type: DataTypes.TEXT,
+        //     allowNull: false,
+        //     unique: true
+        // },
         currency: {
             type: DataTypes.STRING,
             allowNull: true
