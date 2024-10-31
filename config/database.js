@@ -1,10 +1,12 @@
 // config/database.js
+import dotenv from 'dotenv';
+dotenv.config();
 export default {
     development: {
-        username: process.env.DB_USERNAME || 'money_diary_dev',
-        password: process.env.DB_PASSWORD || 'money_diary_dev_pwd',
-        database: process.env.DB_NAME || 'moneydiary',
-        host: process.env.DB_HOST || '127.0.0.1',
+        username: process.env.DB_USERNAME,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME,
+        host: process.env.DB_HOST,
         dialect: 'postgres',
         dialectOptions: {
             useUTC: false,
@@ -14,11 +16,11 @@ export default {
         logging: console.log
     },
     production: {
-        username: process.env.DB_USERNAME || 'money_diary_prod',
-        password: process.env.DB_PASSWORD || 'money_diary_prod_pwd',
-        database: process.env.DB_NAME || 'moneydiary',
-        host: process.env.DB_HOST || '127.0.0.1',
-        dialect: 'postgres', // or 'mysql', etc
+        username: process.env.DB_USERNAME,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME,
+        host: process.env.DB_HOST,
+        dialect: 'postgres',
         logging: console.log      
     }
   };
