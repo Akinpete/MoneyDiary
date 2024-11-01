@@ -1,6 +1,6 @@
 import { checkTelegramAuthorization } from '../utils/TelegramAuth.js'
 import jwt from 'jsonwebtoken';
-import models from '../models/index.js'
+import models from '../models/index.js';
 
 const JWT_SECRET=process.env.JWT_SECRET;
 const BOT_TOKEN=process.env.BOT_TOKEN
