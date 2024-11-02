@@ -1,6 +1,5 @@
 import { Telegraf, Markup } from 'telegraf';
 import dotenv from 'dotenv';
-import models from '../models/index.js';
 
 dotenv.config();
 
@@ -17,26 +16,6 @@ class BotInstance {
   }
 
   setupHandlers() {
-    this.bot.use(async (ctx, next) => {
-        if (ctx.message && ctx.message.from) {
-            const telegram_id = ctx.message.from.id;
-            try {
-                let user = await models.User.findOne({ where: {telegram_id: telegram_id } });
-                if (!user) {
-                    ctx.replyWithMarkdown(
-                        `You're not registered on the Platform`,
-                        Markup.inlineKeyboard([
-                            [Markup.button.url('💬 Click to Register', 'https://cardinal-advanced-buffalo.ngrok-free.app')]
-                        ])
-                    );
-                } else {
-                    return next();
-                }
-            } catch (error) {
-                console.error('Error checking user in database:', error);
-            }
-        }
-    })
     // this.bot.start((ctx) => ctx.reply('Welcome! This bot is live!'));
     this.bot.start((ctx) => {
         ctx.replyWithMarkdown(
@@ -55,17 +34,27 @@ Simplify your money tracking with MoneyDiary. Log expenses, analyze spending, an
     });
     
     this.bot.command('logtransaction', (ctx) => {
-        ctx.reply('Log Your Transaction, Let\'s help you store them', {
+        ctx.reply('Welcome! Click the button below to proceed.', {
+            reply_markup: {
+                inline_keyboard: [
+                    [{ text: 'Open Keyboard', callback_data: 'open_keyboard' }]
+                ]
+            }
+        });
+    });
+    
+    this.bot.action('open_keyboard', (ctx) => {
+        ctx.reply('Type your response:', {
             reply_markup: {
                 force_reply: true,
                 input_field_placeholder: 'Type up to 100 characters...'
             }
         });
     });
-    
+
     this.bot.on('text', (ctx) => {
         console.log(ctx.message);
-        if (ctx.message.reply_to_message && ctx.message.reply_to_message.text === 'Log Your Transaction, Let\'s help you store them') {
+        if (ctx.message.reply_to_message && ctx.message.reply_to_message.text === 'Type your response:') {
             const messageText = ctx.message.text;
             if (messageText.length > 100) {
                 ctx.reply('Please limit your response to 100 characters.');
