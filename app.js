@@ -8,7 +8,9 @@ import models from './models/index.js';
 import authRoutes from './routes/authRouter.js';
 import authenticateToken from './middleware/protected.js';
 import variable_views from './middleware/variable_views.js';
-import botInstance from './TelegramHandler/bot2.js';
+import BotInstance from './TelegramHandler/bot3.js';
+import { setDefaultResultOrder } from "node:dns";
+setDefaultResultOrder("ipv4first");
 
 const app = express();
 const PORT = process.env.PORT;
@@ -23,51 +25,80 @@ app.use(variable_views);
 app.set('view engine', 'ejs');
 
 async function startApplication() {
-    await initializeDatabase();
-    console.log('DB Initialized successfully');
-    
     try {
-        app.listen(PORT, () => {
-            console.log('Server is running on port 3000');
+        // Initialize database first
+        await initializeDatabase();
+        console.log('DB Initialized successfully');
+
+        // Start the server and wait for it to be ready
+        await new Promise((resolve, reject) => {
+            const server = app.listen(PORT, () => {
+                console.log('Server is running on port 3000');
+                resolve();
+            });
+
+            server.on('error', (error) => {
+                reject(error);
+            });
         });
 
-        // Add delay before launching bot to ensure server is fully up
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // Initialize and launch the bot with your BotInstance class
+        try {
+            await botInstance.initialize();
+            await botInstance.launchWithRetry();
+            console.log('Telegram bot launched successfully');
+        } catch (botError) {
+            console.error('Failed to start Telegram bot:', botError);
+            throw botError;
+        }
 
-        // Launch bot with retry mechanism
-        await botInstance.launchWithRetry();
-        console.log('Telegram bot launched successfully');
+        // No need to setup additional shutdown handlers as they're already in your BotInstance class
+        // Just add handlers for uncaught exceptions and unhandled rejections
 
-        // Setup shutdown handlers
-        process.once('SIGINT', async () => {
-            await botInstance.stop('SIGINT');
-            process.exit(0);
-        });
-        
-        process.once('SIGTERM', async () => {
-            await botInstance.stop('SIGTERM');
-            process.exit(0);
-        });
-
-        // Handle connection errors
+        // Handle uncaught exceptions
         process.on('uncaughtException', async (error) => {
             console.error('Uncaught Exception:', error);
-            if (error.code === 'ETIMEDOUT') {
+            
+            if (error.code === 'ETIMEDOUT' && botInstance.isRunning) {
                 try {
                     await botInstance.resetConnection();
                 } catch (e) {
                     console.error('Failed to reset connection:', e);
                     process.exit(1);
                 }
+            } else {
+                console.error('Fatal uncaught exception:', error);
+                process.exit(1);
+            }
+        });
+
+        // Handle unhandled promise rejections
+        process.on('unhandledRejection', async (reason, promise) => {
+            console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+            
+            if (reason && reason.code === 'ETIMEDOUT' && botInstance.isRunning) {
+                try {
+                    await botInstance.resetConnection();
+                } catch (e) {
+                    console.error('Failed to reset connection:', e);
+                    process.exit(1);
+                }
+            } else {
+                console.error('Fatal unhandled rejection:', reason);
+                process.exit(1);
             }
         });
 
     } catch (error) {
-        console.error('Failure to start the server:', error);
+        console.error('Fatal error during application startup:', error);
         process.exit(1);
     }
-
 }
+
+const botInstance = new BotInstance(process.env.BOT_TOKEN, {
+    maxRetries: 5,
+    retryDelay: 5000
+});
 
 startApplication().catch(console.error);
 

@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import models from '../models/index.js';
 import https from 'https';
 
+
 dotenv.config();
 
 class BotInstance {
@@ -86,7 +87,7 @@ class BotInstance {
     async resetConnection() {
         try {
             console.log('Stopping bot...');
-            await this.bot.stop();
+            this.bot.stop();
             
             // Clear any existing connections
             if (this.bot.telegram.options.agent) {
@@ -112,7 +113,9 @@ class BotInstance {
     async launchWithRetry(attempts = 3, delay = 5000) {
         for (let i = 0; i < attempts; i++) {
             try {
-                await this.bot.launch({
+                this.bot.botInfo = await this.bot.telegram.getMe();
+                console.log("Bot started");
+                this.bot.launch({
                     dropPendingUpdates: true, // Important: clear any pending updates
                     polling: {
                         timeout: 30,
