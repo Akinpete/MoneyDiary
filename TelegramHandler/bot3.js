@@ -19,14 +19,54 @@ class BotInstance {
     // this.bot.start((ctx) => ctx.reply('Welcome! This bot is live!'));
     this.bot.start((ctx) => {
         ctx.replyWithMarkdown(
-         `🍌 * Your trusted companion for managing finances:*Simplify your money tracking with MoneyDiary. Log expenses, analyze spending, and stay on top of your finances in real-time.`,
-         Markup.inlineKeyboard([               
-           [Markup.button.url('💬 Official Channel', 'https://t.me/+lrHULPUINwA1ZDE0')],
+         `🚀 Money Diary - AI Financial Assistant
+
+
+💸 *Your trusted companion for managing finances:*
+
+Simplify your money tracking with MoneyDiary. Log expenses, analyze spending, and stay on top of your finances in real-time.`,
+        Markup.inlineKeyboard([               
+           [Markup.button.url('💬 Official Channel', 'https://t.me/+IrHULPUINwA1ZDE0')],
         //    [Markup.button.url('🎉 Announcement Channel', 'https://example.com/announcement-channel')],
            [Markup.button.url('🌐 Website', 'https://akin-pete.tech')],
          ])
        );
-    });    
+    });
+    
+    this.bot.command('logtransaction', (ctx) => {
+        ctx.reply('Welcome! Click the button below to proceed.', {
+            reply_markup: {
+                inline_keyboard: [
+                    [{ text: 'Open Keyboard', callback_data: 'open_keyboard' }]
+                ]
+            }
+        });
+    });
+    
+    this.bot.action('open_keyboard', (ctx) => {
+        ctx.reply('Type your response:', {
+            reply_markup: {
+                force_reply: true,
+                input_field_placeholder: 'Type up to 100 characters...'
+            }
+        });
+    });
+
+    this.bot.on('text', (ctx) => {
+        console.log(ctx.message);
+        if (ctx.message.reply_to_message && ctx.message.reply_to_message.text === 'Type your response:') {
+            const messageText = ctx.message.text;
+            if (messageText.length > 100) {
+                ctx.reply('Please limit your response to 100 characters.');
+            } else {
+                console.log(`User typed: ${messageText}`); // Log the message text
+                ctx.reply('Transaction Logged!');
+
+            }
+        }
+    });
+    
+    
 }
 
   async initialize() {
