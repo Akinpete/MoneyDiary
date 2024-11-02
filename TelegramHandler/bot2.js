@@ -34,13 +34,11 @@ class BotInstance {
         // this.bot.start((ctx) => ctx.reply('Welcome! This bot is live!'));
         this.bot.start((ctx) => {
             ctx.replyWithMarkdown(
-             `🍌 *Your smart ally in the world of trading:*
-          Boost your gains with Banana Gun. Trade faster, snipe earlier and track live profits.`,
-             Markup.inlineKeyboard([
-               [Markup.button.url('📘 Sniper\'s Playbook', 'https://example.com/snipers-playbook')],
-               [Markup.button.url('💬 Official Channel', 'https://example.com/official-channel')],
-               [Markup.button.url('🎉 Announcement Channel', 'https://example.com/announcement-channel')],
-               [Markup.button.url('🌐 Website', 'https://example.com/website')],
+             `🍌 * Your trusted companion for managing finances:*Simplify your money tracking with MoneyDiary. Log expenses, analyze spending, and stay on top of your finances in real-time.`,
+             Markup.inlineKeyboard([               
+               [Markup.button.url('💬 Official Channel', 'https://t.me/+lrHULPUINwA1ZDE0')],
+            //    [Markup.button.url('🎉 Announcement Channel', 'https://example.com/announcement-channel')],
+               [Markup.button.url('🌐 Website', 'https://akin-pete.tech')],
              ])
            );
         });
