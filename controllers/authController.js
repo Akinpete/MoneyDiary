@@ -11,7 +11,7 @@ export const login_get = (req, res) => {
 
 export const logout_get = (req, res) => {
     res.clearCookie('token');
-    res.redirect('/');
+    res.redirect('login');
 }
 
 export const after_login_get = async (req, res) => {
@@ -44,7 +44,7 @@ export const after_login_get = async (req, res) => {
         });
 
         // res.send('be like sey e work o');
-        res.redirect('/smoothies');
+        res.redirect('/home');
 
 
     } catch (error) {

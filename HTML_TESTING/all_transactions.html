@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <!-- Mobile Header -->
+    <header class="lg:hidden flex justify-between items-center p-4 bg-white border-b">
+        <button class="text-2xl" id="mobileMenuBtn">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h1 class="text-xl font-semibold">Transactions</h1>
+        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+            <span>PA</span>
+        </div>
+    </header>
+
+    <div class="flex h-[calc(100vh-56px)] lg:h-screen">
+        <!-- Sidebar - hidden on mobile by default -->
+        <aside id="sidebar" class="hidden lg:block w-64 bg-black text-white fixed lg:relative h-full z-50">
+            <div class="p-6">
+                <div class="mb-8">
+                    <h1 class="text-2xl font-bold">CLEVA</h1>
+                </div>
+                
+                <nav class="space-y-4">
+                    <a href="#" class="flex items-center space-x-3 text-gray-300 hover:text-white">
+                        <i class="fas fa-home"></i>
+                        <span>Home</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 text-yellow-500 font-semibold">
+                        <i class="fas fa-exchange-alt"></i>
+                        <span>Transactions</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 text-gray-300 hover:text-white">
+                        <i class="fas fa-users"></i>
+                        <span>Recipients</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 text-gray-300 hover:text-white">
+                        <i class="fas fa-share"></i>
+                        <span>Referrals</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 text-gray-300 hover:text-white">
+                        <i class="fas fa-credit-card"></i>
+                        <span>Cards</span>
+                    </a>
+                    <a href="#" class="flex items-center justify-between text-gray-300 hover:text-white">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-tag"></i>
+                            <span>Deals</span>
+                        </div>
+                        <span class="bg-white text-black text-xs px-2 py-1 rounded-full">New</span>
+                    </a>
+                    <a href="#" class="flex items-center justify-between text-gray-300 hover:text-white">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-file-invoice"></i>
+                            <span>Invoices</span>
+                        </div>
+                        <span class="bg-green-500 text-white text-xs px-2 py-1 rounded-full">Coming soon</span>
+                    </a>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-4 lg:p-8 overflow-y-auto">
+            <!-- Tabs -->
+            <div class="flex space-x-2 mb-6 bg-gray-100 p-1 rounded-lg">
+                <button class="flex-1 px-4 py-2 bg-black text-white rounded-md text-sm">All</button>
+                <button class="flex-1 px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-md text-sm">Outgoing</button>
+                <button class="flex-1 px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-md text-sm">Incoming</button>
+            </div>
+
+            <!-- Search -->
+            <div class="mb-6">
+                <div class="relative">
+                    <input type="text" placeholder="Search transaction" 
+                           class="w-full p-3 pl-10 border rounded-lg bg-white">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+            </div>
+
+            <!-- Transactions List -->
+            <div class="bg-white rounded-lg">
+                <div class="flex justify-between items-center p-4">
+                    <h2 class="text-lg font-semibold">All Transactions</h2>
+                    <button class="px-4 py-1.5 border rounded-lg hover:bg-gray-50 text-sm">Export</button>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-y bg-gray-50">
+                                <th class="p-4 w-8"><input type="checkbox" class="rounded"></th>
+                                <th class="p-4 text-left font-medium">
+                                    Date <i class="fas fa-sort-down ml-1"></i>
+                                </th>
+                                <th class="p-4 text-left font-medium text-blue-600">Recipient</th>
+                                <th class="p-4 text-left font-medium">Description</th>
+                                <th class="p-4 text-left font-medium">Amount</th>
+                                <th class="p-4 text-left font-medium">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionTableBody">
+                            <!-- Table rows will be inserted here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Mobile Chat Button -->
+    <button class="lg:hidden fixed bottom-4 right-4 w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-white shadow-lg">
+        <i class="fas fa-comments"></i>
+    </button>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const sidebar = document.getElementById('sidebar');
+        
+        mobileMenuBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('hidden');
+        });
+
+        // Sample transaction data
+        const transactions = [
+            {
+                date: '2024-11-02',
+                recipient: 'Peter Akinpelumi',
+                description: 'International transfer',
+                amount: 30.00,
+                status: 'Completed'
+            },
+            {
+                date: '2024-10-31',
+                recipient: 'Peter Akinpelumi',
+                description: 'International transfer',
+                amount: 30.00,
+                status: 'Completed'
+            },
+            // Add more transactions as needed
+        ];
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        }
+
+        function renderTransactions() {
+            const tbody = document.getElementById('transactionTableBody');
+            tbody.innerHTML = transactions.map(tx => `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="p-4"><input type="checkbox" class="rounded"></td>
+                    <td class="p-4">${formatDate(tx.date)}</td>
+                    <td class="p-4 text-blue-600">${tx.recipient}</td>
+                    <td class="p-4">${tx.description}</td>
+                    <td class="p-4">$${tx.amount.toFixed(2)}</td>
+                    <td class="p-4">
+                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                            ${tx.status}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Initialize the table
+        renderTransactions();
+
+        // Search functionality
+        document.querySelector('input[type="text"]').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredTransactions = transactions.filter(tx => 
+                tx.recipient.toLowerCase().includes(searchTerm) ||
+                tx.description.toLowerCase().includes(searchTerm) ||
+                tx.amount.toString().includes(searchTerm)
+            );
+            
+            const tbody = document.getElementById('transactionTableBody');
+            tbody.innerHTML = filteredTransactions.map(tx => `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="p-4"><input type="checkbox" class="rounded"></td>
+                    <td class="p-4">${formatDate(tx.date)}</td>
+                    <td class="p-4 text-blue-600">${tx.recipient}</td>
+                    <td class="p-4">${tx.description}</td>
+                    <td class="p-4">$${tx.amount.toFixed(2)}</td>
+                    <td class="p-4">
+                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                            ${tx.status}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        });
+    </script>
+</body>
+</html>

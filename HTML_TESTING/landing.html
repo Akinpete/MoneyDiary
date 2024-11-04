@@ -1,4 +1,63 @@
-<%- include('partials/header'); -%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoneyDiary - Money Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'custom-green': '#1B352B',
+                        'custom-green-hover': '#2ec61c'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="font-sans">
+    <!-- Navbar Section -->
+    <section id="navbar" class="bg-white py-4 px-4 md:px-6 shadow-sm fixed w-full top-0 z-50">
+        <nav class="max-w-7xl mx-auto">
+            <div class="flex justify-between items-center">
+                <!-- Logo -->
+                <div class="text-custom-green font-navy text-2xl">MoneyDiary</div>
+
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="#" class="text-gray-600 hover:text-gray-900">About Us</a>
+                    <a href="#" class="text-gray-600 hover:text-gray-900">Blog</a>
+                    <a href="#" class="text-gray-600 hover:text-gray-900">Pricing</a>
+                    <!-- <a href="#" class="text-gray-600 hover:text-gray-900">Resources</a> -->
+                    <a href="#" class="text-gray-600 hover:text-gray-900">Company</a>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <button id="menuButton" class="md:hidden text-gray-600 hover:text-gray-900 focus:outline-none">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path class="menu-open" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                            d="M4 6h16M4 12h16M4 18h16"/>
+                        <path class="menu-close hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                            d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Mobile Navigation -->
+            <div id="mobileMenu" class="hidden md:hidden mt-4 pb-4">
+                <div class="flex flex-col space-y-4">
+                    <a href="#" class="text-gray-600 hover:text-gray-900">Platform</a>
+                    <a href="#" class="text-gray-600 hover:text-gray-900">Customers</a>
+                    <a href="#" class="text-gray-600 hover:text-gray-900">Pricing</a>
+                    <a href="#" class="text-gray-600 hover:text-gray-900">Resources</a>
+                    <a href="#" class="text-gray-600 hover:text-gray-900">Company</a>
+                </div>
+            </div>
+        </nav>
+    </section>
 
     <!-- Announcement Banner Section -->
     <section id="announcement" class="bg-custom-green text-white py-3 mt-16">
@@ -130,6 +189,17 @@
             </div>
         </div>
     </section>
+
+    <!-- Simple Footer -->
+    <footer class="bg-gray-50 py-12">
+        <div class="max-w-6xl mx-auto px-4 text-center text-gray-600">
+            <p>&copy; 2024 MoneyDiary. All rights reserved.</p>
+        </div>
+    </footer>
+
+    
+
+
     <script>
         // Mobile menu functionality
         const menuButton = document.getElementById('menuButton');
@@ -151,15 +221,22 @@
                 menuCloseIcon.classList.add('hidden');
             }
         });
+
+        // Telegram connection functionality
+        document.getElementById('telegramConnect').addEventListener('click', function() {
+            // Add your Telegram connection logic here
+            console.log('Connecting to Telegram...');
+        });
+
         // FAQ Functionality
         document.querySelectorAll('.faq-toggle').forEach(button => {
             button.addEventListener('click', () => {
                 // Toggle active class on the button
                 button.classList.toggle('active');
-        
+                
                 // Find the content div
                 const content = button.nextElementSibling;
-        
+                
                 // Toggle visibility
                 if (content.style.maxHeight) {
                     content.style.maxHeight = null;
@@ -171,4 +248,5 @@
             });
         });
     </script>
-<%- include('partials/footer'); -%>
+</body>
+</html>

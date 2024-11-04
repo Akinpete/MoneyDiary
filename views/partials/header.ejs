@@ -1,19 +1,64 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
-  <link rel="stylesheet" href="/styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoneyDiary - Money Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'custom-green': '#1B352B',
+                        'custom-green-hover': '#2ec61c'
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body>
-  <nav>
-    <h1><a href="/">Ninja Smoothies</a></h1>
-    <ul>
-      <% if (user_username) { %>
-        <li><a href="/logout" class="btn">Logout</a></li>
-      <% } else { %>
-        <li><a href="/login" class="btn">Sign Up</a></li>
-        <li><a href="/login" class="btn">Login</a></li>
-      <% } %>
-    </ul>
-  </nav>
+<body class="font-sans">
+    <!-- Navbar Section -->
+    <section id="navbar" class="bg-white py-4 px-4 md:px-6 shadow-sm fixed w-full top-0 z-50">
+        <nav class="max-w-7xl mx-auto">
+            <div class="flex justify-between items-center">
+                <!-- Logo -->
+                <a href="/">
+                    <div class="text-custom-green font-navy text-2xl">MoneyDiary</div>
+                </a>
+
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="#" class="text-gray-600 hover:text-gray-900">About Us</a>
+                    <a href="#" class="text-gray-600 hover:text-gray-900">Blog</a>
+                    <a href="#" class="text-gray-600 hover:text-gray-900">Pricing</a>
+                    <!-- <a href="#" class="text-gray-600 hover:text-gray-900">Resources</a> -->
+                    <a href="#" class="text-gray-600 hover:text-gray-900">Company</a>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <button id="menuButton" class="md:hidden text-gray-600 hover:text-gray-900 focus:outline-none">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path class="menu-open" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                            d="M4 6h16M4 12h16M4 18h16"/>
+                        <path class="menu-close hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                            d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Mobile Navigation -->
+            <div id="mobileMenu" class="hidden md:hidden mt-4 pb-4">
+                <div class="flex flex-col space-y-4">
+                    <a href="#" class="text-gray-600 hover:text-gray-900">About</a>
+                    <a href="#" class="text-gray-600 hover:text-gray-900">Blog</a>
+                    <a href="#" class="text-gray-600 hover:text-gray-900">Pricing</a>
+                    <!-- <a href="#" class="text-gray-600 hover:text-gray-900">Resources</a> -->
+                    <a href="#" class="text-gray-600 hover:text-gray-900">Company</a>
+                </div>
+            </div>
+        </nav>
+    </section>
+    <!-- <script src="/views2/partials/script.js"></script> -->
