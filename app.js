@@ -8,12 +8,15 @@ import models from './models/index.js';
 import authRoutes from './routes/authRouter.js';
 import authenticateToken from './middleware/protected.js';
 import variable_views from './middleware/variable_views.js';
-import BotInstance from './TelegramHandler/bot3.js';
+import BotInstance from './TelegramHandler/bot4.js';
 import { setDefaultResultOrder } from "node:dns";
 setDefaultResultOrder("ipv4first");
 
+
 const app = express();
 const PORT = process.env.PORT;
+// const __filename = fileURLToPath(import.meta.url)
+// const __dirname = path.dirname(__filename);
 
 // middleware
 app.use(express.static('public'));
@@ -22,7 +25,9 @@ app.use(variable_views);
 
 
 //view engine
+// app.set('views', path.join(__dirname, 'views2'));
 app.set('view engine', 'ejs');
+
 
 async function startApplication() {
     try {
@@ -104,10 +109,15 @@ startApplication().catch(console.error);
 
 // routes
 app.get('/', (req, res) => res.render('home'));
-app.get('/smoothies', authenticateToken, (req, res) => {
+app.get('/home', authenticateToken, (req, res) => {
     const user = req.user;
     res.locals.user_username = user.username;
-    res.render('smoothies');
+    res.render('login_home');
 });
+app.get('/transactions', authenticateToken, (req, res) => {
+    const user = req.user;
+    res.locals.user_username = user.username;
+    res.render('transactions');
+})
 app.use(authRoutes);
 

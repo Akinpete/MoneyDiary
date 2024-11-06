@@ -1,9 +1,65 @@
-import { Telegraf, Markup } from 'telegraf';
+import { Telegraf, Markup, Composer, session } from 'telegraf';
 import dotenv from 'dotenv';
 import models from '../models/index.js';
 
 dotenv.config();
 
+const transactionLoggerComposer = new Composer();
+
+transactionLoggerComposer.command('logtransaction', (ctx) => {
+  ctx.reply('Log Your Transaction, Let\'s help you store them', {
+    reply_markup: {
+      force_reply: true,
+      input_field_placeholder: 'Type up to 100 characters...'
+    }
+  });
+});
+
+transactionLoggerComposer.on('text', (ctx) => {
+  const messageText = ctx.message.text;
+
+  if (ctx.message.reply_to_message?.text === 'Log Your Transaction, Let\'s help you store them') {
+    if (messageText.length > 100) {
+      ctx.reply('Please limit your response to 100 characters.');
+    } else {
+      console.log(`User typed: ${messageText}`);
+      ctx.reply(
+        'Please pick a category or type a custom category if none of these match:',
+        Markup.inlineKeyboard([
+          [Markup.button.callback('Option 1', 'option_1')],
+          [Markup.button.callback('Option 2', 'option_2')],
+          [Markup.button.callback('Option 3', 'option_3')],
+          [Markup.button.callback('Option 4', 'option_4')],
+          [Markup.button.callback('Other', 'other')]
+        ])
+      );
+    }
+  } else if (ctx.message.reply_to_message?.text === 'Please type your custom input below:') {
+    console.log(`Custom Category: ${messageText}`);
+    ctx.reply(
+      'I DON SAVE AM',
+    );
+  }
+});
+
+transactionLoggerComposer.action(/option_\d|other/, async (ctx) => {
+  const selectedOption = ctx.match[0];
+
+  console.log(`Button clicked: ${selectedOption}`);
+  await ctx.editMessageReplyMarkup({ inline_keyboard: [] }).catch(() => {});
+
+  if (selectedOption === 'other') {
+    console.log('E PICK AM!');
+    await ctx.reply('Please type your custom input below:', {
+      reply_markup: {
+        force_reply: true,
+        input_field_placeholder: 'Type your custom input...'
+      }
+    });
+  } else {
+    await ctx.reply(`You selected: ${selectedOption.replace('_', ' ').toUpperCase()}`);
+  }
+});
 
 class BotInstance {
   token = process.env.BOT_TOKEN;
@@ -16,30 +72,12 @@ class BotInstance {
     this.currentRetry = 0;
   }
 
-  setupHandlers() {
-    this.bot.use(async (ctx, next) => {
-        if (ctx.message && ctx.message.from) {
-            const telegram_id = ctx.message.from.id;
-            try {
-                let user = await models.User.findOne({ where: {telegram_id: telegram_id } });
-                if (!user) {
-                    ctx.replyWithMarkdown(
-                        `You're not registered on the Platform`,
-                        Markup.inlineKeyboard([
-                            [Markup.button.url('💬 Click to Register', 'https://cardinal-advanced-buffalo.ngrok-free.app')]
-                        ])
-                    );
-                } else {
-                    return next();
-                }
-            } catch (error) {
-                console.error('Error checking user in database:', error);
-            }
-        }
-    })
-    // this.bot.start((ctx) => ctx.reply('Welcome! This bot is live!'));
-    this.bot.start((ctx) => {
-        ctx.replyWithMarkdown(
+  
+
+  setupHandlers() {   
+    // this.bot.start((ctx) => ctx.reply('Welcome! This bot is live!')); 
+    this.bot.start( async (ctx) => {
+        await ctx.replyWithMarkdown(
          `🚀 Money Diary - AI Financial Assistant
 
 
@@ -53,29 +91,8 @@ Simplify your money tracking with MoneyDiary. Log expenses, analyze spending, an
          ])
        );
     });
-    
-    this.bot.command('logtransaction', (ctx) => {
-        ctx.reply('Log Your Transaction, Let\'s help you store them', {
-            reply_markup: {
-                force_reply: true,
-                input_field_placeholder: 'Type up to 100 characters...'
-            }
-        });
-    });
-    
-    this.bot.on('text', (ctx) => {
-        console.log(ctx.message);
-        if (ctx.message.reply_to_message && ctx.message.reply_to_message.text === 'Log Your Transaction, Let\'s help you store them') {
-            const messageText = ctx.message.text;
-            if (messageText.length > 100) {
-                ctx.reply('Please limit your response to 100 characters.');
-            } else {
-                console.log(`User typed: ${messageText}`); // Log the message text
-                ctx.reply('Transaction Logged!');
 
-            }
-        }
-    });
+    // this.bot.use(transactionLoggerComposer.middleware());
     
     
 }
@@ -88,8 +105,30 @@ Simplify your money tracking with MoneyDiary. Log expenses, analyze spending, an
       console.error('Bot error:', err);
       this.handleError(err);
     });
+    this.bot.use(this.authMiddleware.bind(this));
     this.setupHandlers();
+    this.bot.use(transactionLoggerComposer.middleware());
 
+  }
+
+  async authMiddleware(ctx, next) {
+    if (ctx.message && ctx.message.from) {
+      const telegram_id = ctx.message.from.id;
+      try {
+        let user = await models.User.findOne({ where: { telegram_id: telegram_id } });
+        if (!user) {
+          return ctx.replyWithMarkdown(
+            `You're not registered on the Platform`,
+            Markup.inlineKeyboard([
+              [Markup.button.url('💬 Click to Register', 'https://cardinal-advanced-buffalo.ngrok-free.app')]
+            ])
+          );
+        }
+        return next();
+      } catch (error) {
+        console.error('Error checking user in database:', error);
+      }
+    }
   }
 
   async handleError(error) {
