@@ -131,27 +131,42 @@ app.get('/categories', authenticateToken, async (req, res) => {
 
 app.post('/categories', authenticateToken, async (req, res) => {
     try {
-  
-      const selectedOptions = req.body;
-      const user = req.user;
+        const selectedOptions = req.body;
+        selectedOptions.pop();
+        const user = req.user;
+        console.log(`SELECTED OPTIONS: ${selectedOptions}`);
       
-  
-      // Save each option as a separate row in the Category table
-      for (const option of selectedOptions) {
-        const category= await models.Category.findOne({ name: option });
-        await models.UserCategory.create({ 
-            name: option,
-            user_id: user.id,
-            category_id: category.id
-         });
-      }
-  
-      // Send a success response
-    //   res.json({ message: 'Fundraiser options saved successfully' });
-      res.render('home');
+        // Save each option as a separate row in the Category table
+        for (const option of selectedOptions) {
+            const category = await models.Category.findOne({ where: { name: option }});
+            
+            if (!category) {
+                // Handle case where category doesn't exist
+                console.log(`Category ${option} not found`);
+                continue; // Skip to next iteration
+            }
+
+            // Try to create the user-category association
+            try {
+                await models.UserCategory.create({ 
+                    name: option,
+                    user_id: user.id,
+                    category_id: category.id
+                });
+            } catch (err) {
+                if (err.name === 'SequelizeUniqueConstraintError') {
+                    // This user-category association already exists, just skip it
+                    console.log(`User already has category ${option}`);
+                    continue;
+                }
+                throw err; // Re-throw if it's a different error
+            }
+        }
+
+        res.render('home');
     } catch (error) {
-      console.error('Error saving fundraiser options:', error);
-      res.status(500).json({ message: 'Error saving fundraiser options' });
+        console.error('Error creating categories:', error);
+        res.status(500).json({ message: 'Error creating categories' });
     }
 });
 app.use(authRoutes);

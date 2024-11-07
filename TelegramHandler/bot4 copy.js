@@ -115,36 +115,23 @@ class BotInstance {
         this.bot.on('text', async (ctx) => {
             const messageText = ctx.message.text;
             const telegram_id = ctx.from?.id;
-            const user = await models.User.findOne({ where: {telegram_id: telegram_id}});    
+            const user = await models.User.findOne({ where: {user_telegram_id: telegram_id}});    
             if (ctx.message.reply_to_message?.text === 'Log Your Transaction, Let\'s help you store them') {
                 if (messageText.length > 100) {
                     ctx.reply('Please limit your response to 100 characters.');                    
                 } else {
                     console.log(`User typed: ${messageText}`);
-                    const userCategories = await user.getCategories();
-                    for (const category of userCategories){
-                        console.log(`User is associated with category: ${category.name}`);
-                    }
-                    const inlineKeyboard = userCategories.map((category, index) => {
-                        return [Markup.button.callback(category.name, `option_${index + 1}`)];
-                      });
-
-                    inlineKeyboard.push([Markup.button.callback('Other', 'other')]);
-
+                    const usercategories = await models.UserCategory.findAll({ where: { user_id: user.id }});
                     ctx.reply(
                         'Please pick a category or type a custom category if none of these match:',
-                        Markup.inlineKeyboard(inlineKeyboard)
-                    );
-                    // ctx.reply(
-                    //     'Please pick a category or type a custom category if none of these match:',
-                    //     Markup.inlineKeyboard([
-                    //         [Markup.button.callback('Option 1', 'option_1')],
-                    //         [Markup.button.callback('Option 2', 'option_2')],
-                    //         [Markup.button.callback('Option 3', 'option_3')],
-                    //         [Markup.button.callback('Option 4', 'option_4')],
-                    //         [Markup.button.callback('Other', 'other')] 
-                    //     ])
-                    // );                 
+                        Markup.inlineKeyboard([
+                            [Markup.button.callback('Option 1', 'option_1')],
+                            [Markup.button.callback('Option 2', 'option_2')],
+                            [Markup.button.callback('Option 3', 'option_3')],
+                            [Markup.button.callback('Option 4', 'option_4')],
+                            [Markup.button.callback('Other', 'other')] 
+                        ])
+                    );                 
                 }
             } else if (ctx.message.reply_to_message?.text === 'Please type your custom input below:') {
                 console.log(`Custom Category: ${messageText}`);

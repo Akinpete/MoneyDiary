@@ -48,7 +48,15 @@ class User extends BaseModel {
 
     this.belongsToMany(models.Category, { 
       through: 'UserCategory',
-      foreignKey: 'user_id' });
+      foreignKey: 'user_id'
+    });
+
+    // this.belongsTo(models.Category, {
+    //   foreignKey: 'category_id',
+    //   as: 'categories'
+    // })
+
+    
   }
 }
 

@@ -2,17 +2,17 @@ import models, { sequelize } from './models/index.js'
 
 async function createInitialUser() {
     try {
-        const newUser = await models.User.create({
-            username: 'Akin',
-            telegram_id: 2345,
-            password_hash: 'HumanBeing'
-        });
-        console.log('New user created:', newUser);
-        const category_ids = [];
-        const categories = ["food", "groceries", "Black Tax", "Subscription", "Phone", "Data"];
+        // const newUser = await models.User.create({
+        //     username: 'Akin',
+        //     telegram_id: 2345,
+        //     password_hash: 'HumanBeing'
+        // });
+        // console.log('New user created:', newUser);
+        // const category_ids = [];
+        const categories = ["ounje", "groceries", "Black Tax", "Subscription", "Phone", "Data"];
         for (const category of categories) {
             const newCategory = await models.Category.create({ name: category });
-            category_ids.push(newCategory.id);
+            // category_ids.push(newCategory.id);
         }
 
         // const newUserCategory = await models.UserCategory.create({ 
