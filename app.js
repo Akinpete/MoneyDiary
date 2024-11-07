@@ -21,6 +21,7 @@ const PORT = process.env.PORT;
 // middleware
 app.use(express.static('public'));
 app.use(cookieParser());
+app.use(express.json());
 app.use(variable_views);
 
 
@@ -118,6 +119,40 @@ app.get('/transactions', authenticateToken, (req, res) => {
     const user = req.user;
     res.locals.user_username = user.username;
     res.render('transactions');
-})
+});
+
+app.get('/categories', authenticateToken, async (req, res) => {
+    const user = req.user;
+    res.locals.user_username = user.username;
+    const categories = await models.Category.findAll({ raw: true});
+    res.locals.user_categories = categories;
+    res.render('categories');
+});
+
+app.post('/categories', authenticateToken, async (req, res) => {
+    try {
+  
+      const selectedOptions = req.body;
+      const user = req.user;
+      
+  
+      // Save each option as a separate row in the Category table
+      for (const option of selectedOptions) {
+        const category= await models.Category.findOne({ name: option });
+        await models.UserCategory.create({ 
+            name: option,
+            user_id: user.id,
+            category_id: category.id
+         });
+      }
+  
+      // Send a success response
+    //   res.json({ message: 'Fundraiser options saved successfully' });
+      res.render('home');
+    } catch (error) {
+      console.error('Error saving fundraiser options:', error);
+      res.status(500).json({ message: 'Error saving fundraiser options' });
+    }
+});
 app.use(authRoutes);
 

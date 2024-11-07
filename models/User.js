@@ -45,6 +45,10 @@ class User extends BaseModel {
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE'
     });
+
+    this.belongsToMany(models.Category, { 
+      through: 'UserCategory',
+      foreignKey: 'user_id' });
   }
 }
 

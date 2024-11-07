@@ -8,19 +8,33 @@ async function createInitialUser() {
             password_hash: 'HumanBeing'
         });
         console.log('New user created:', newUser);
-        const newTransaction = await models.Transaction.create({
-            transaction_text: 'sent mercy 1000',
-            transaction_type: 'Credit',
-            amount: 1000,
-            recipient: 'Mercy',
-            user_id: newUser.id
-        });
-        console.log('New Txn created:', newTransaction);
-        const newEmbedding = await models.Embedding.create({
-            transaction_id: newTransaction.id,
-            data: [0.5, 1.2, 0.8]           
-        });
-        console.log('New Txn created:', newEmbedding);
+        const category_ids = [];
+        const categories = ["food", "groceries", "Black Tax", "Subscription", "Phone", "Data"];
+        for (const category of categories) {
+            const newCategory = await models.Category.create({ name: category });
+            category_ids.push(newCategory.id);
+        }
+
+        // const newUserCategory = await models.UserCategory.create({ 
+        //     user_id: newUser.id,
+        //     category_id: category_ids[1]
+        //  });
+
+
+        // const newTransaction = await models.Transaction.create({
+        //     transaction_text: 'sent eben 1000 naira for support',
+        //     transaction_type: 'Debit',
+        //     amount: 1000,
+        //     recipient: 'eben',
+        //     user_id: newUser.id,
+        //     usercategory_id: newUserCategory.id
+        // });
+        // console.log('New Txn created:', newTransaction);
+        // const newEmbedding = await models.Embedding.create({
+        //     transaction_id: newTransaction.id,
+        //     data: [0.5, 1.2, 0.8]           
+        // });
+        // console.log('New Txn created:', newEmbedding);
     } catch (error) {
         console.error('Error creating user:', error);
     }
@@ -31,7 +45,7 @@ async function initializeDatabase() {
         await sequelize.authenticate();
         console.log('Database connection established successfully.');
 
-        await sequelize.sync({ alter:true });
+        await sequelize.sync({ force:true });
         console.log('Database synchronized successfully.');
         // Call the function to create the user
         await createInitialUser();

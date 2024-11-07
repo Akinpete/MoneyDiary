@@ -1,0 +1,70 @@
+<%- include('partials/header'); -%>
+
+<h1>Welcome, <%= user_username %>!</h1>
+
+
+<section class="py-8 px-4 sm:px-6 lg:px-8 mt-16">
+    <h1 class="text-2xl font-bold mb-4">Choose the categories for your transactions</h1>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <% for (let i = 0; i < user_categories.length; i++) { %>
+            <button class="bg-gray-200 hover:bg-gray-300 rounded-md px-4 py-2"><%= user_categories[i].name %></button>
+        <% } %>
+    </div>
+    <div class="mt-4 text-right">
+        <button class="bg-blue-500 hover:bg-blue-600 text-white rounded-md px-4 py-2">Submit</button>
+    </div>
+</section>
+
+
+  <script>
+    const buttons = document.querySelectorAll('button');
+    const submitButton = document.querySelector('button.bg-blue-500');
+    const selectedOptions = [];
+
+    buttons.forEach((button) => {
+        button.addEventListener('click', () => {
+            button.classList.toggle('bg-gray-300');
+            const option = button.textContent;
+            if (button.classList.contains('bg-gray-300')) {
+                selectedOptions.push(option);
+            } else {
+                const index = selectedOptions.indexOf(option);
+                if (index !== -1) {
+                    selectedOptions.splice(index, 1);
+                }
+            }
+            console.log(selectedOptions);
+        });
+    });
+
+    submitButton.addEventListener('click', () => {
+    // Send the selected options to the backend
+    fetch('/categories', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(selectedOptions),
+    })
+        .then((response) => {
+        if (response.ok) {
+            // Redirect to the /home route
+            window.location.href = '/home';
+        } else {
+            return response.json();
+        }
+        })
+        .then((data) => {
+        if (data) {
+            console.error('Error:', data);
+        }
+        })
+        .catch((error) => {
+        console.error('Error:', error);
+        });
+    });
+    
+  </script>
+
+
+<%- include('partials/footer'); -%>
