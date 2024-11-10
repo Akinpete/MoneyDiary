@@ -19,6 +19,15 @@ class User extends BaseModel {
             allowNull: false,
             unique: true
         },
+        photo_url: { 
+          type: DataTypes.STRING, 
+          allowNull: true, 
+          validate: { 
+            isUrl: { 
+              msg: "Must be a valid URL" 
+            } 
+          } 
+        },
         // password_hash: {
         //     type: DataTypes.TEXT,
         //     allowNull: false,

@@ -62,15 +62,11 @@ class BotInstance {
         // const telegram_id = ctx.from?.id;
         const response = await runcheck(text);
         if (!response) {
-            return ctx.reply(
-                'Invalid Input',
-                {
-                    reply_markup: {
-                        inline_keyboard: [[
-                            { text: '🔄 Please Try Again', callback_data: 'start' }
-                        ]]
-                    }
-                }
+            return ctx.replyWithMarkdown(
+                `Invalid Input`,
+                Markup.inlineKeyboard([
+                    [Markup.button.command('💬 Please Try Again', 'logtransaction')]
+                ])
             );
         }
         return next();
@@ -117,36 +113,37 @@ class BotInstance {
                 if (messageText.length > 100) {
                     ctx.reply('Please limit your response to 100 characters.');                    
                 } else {
-                    try {
-                        await this.isvalidLog(ctx, messageText, async () => {
-                            console.log(`User typed: ${messageText}`);
-                            transaction_text = messageText;
-                            const userCategories = await user.getCategories();
-                            cpyUser_categories = userCategories;
-
-                            for (const category of userCategories){
-                                console.log(`User is associated with category: ${category.name}`);
-                            }
-
-                            const inlineKeyboard = userCategories.map((category, index) => {
-                                return [Markup.button.callback(category.name, `option_${index + 1}`)];
-                            });
-
-                            inlineKeyboard.push([Markup.button.callback('Other', 'other')]);
-
-                            await ctx.reply(
-                                'Please pick a category or type a custom category if none of these match:',
-                                Markup.inlineKeyboard(inlineKeyboard)
-                            );
-
-                        });
-                    } catch (error) {
-                        console.error('Error in validation middleware:', error);
-                        return ctx.reply('An error occurred while processing your transaction.');
+                  const response = await runcheck(transaction_text);
+                  while(response) {
+                    console.log(`User typed: ${messageText}`);
+                    transaction_text = messageText;                   
+                    const userCategories = await user.getCategories();
+                    cpyUser_categories = userCategories;
+                    for (const category of userCategories){
+                        console.log(`User is associated with category: ${category.name}`);
                     }
-                                  
-                }
+                    const inlineKeyboard = userCategories.map((category, index) => {
+                        return [Markup.button.callback(category.name, `option_${index + 1}`)];
+                      });
 
+                    inlineKeyboard.push([Markup.button.callback('Other', 'other')]);
+
+                    ctx.reply(
+                        'Please pick a category or type a custom category if none of these match:',
+                        Markup.inlineKeyboard(inlineKeyboard)
+                    );
+                    break;
+
+                  }
+
+                  ctx.reply('Log Your Transaction, Let\'s help you store them', {
+                    reply_markup: {
+                        force_reply: true,
+                        input_field_placeholder: 'Invalid input, Retype...'
+                    }
+                  });
+                                    
+                }
             } else if (ctx.message.reply_to_message?.text === 'Please type your custom input below:') {
                 console.log(`Custom Category: ${messageText}`);
                 const newcategory = await models.Category.create({

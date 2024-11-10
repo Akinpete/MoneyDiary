@@ -9,9 +9,12 @@ async function createInitialUser() {
         // });
         // console.log('New user created:', newUser);
         // const category_ids = [];
-        const categories = ["ounje", "groceries", "Black Tax", "Subscription", "Phone", "Data"];
+        const categories = ["ounje", "groceries", "Black Tax", "Subscription", "Phone", "Data", "CREDIT ALERT"];
         for (const category of categories) {
-            const newCategory = await models.Category.create({ name: category });
+            const newCategory = await models.Category.create({ 
+                name: category,
+                is_public: true 
+            });
             // category_ids.push(newCategory.id);
         }
 
@@ -45,7 +48,7 @@ async function initializeDatabase() {
         await sequelize.authenticate();
         console.log('Database connection established successfully.');
 
-        await sequelize.sync({ force:true });
+        await sequelize.sync({ alter:true });
         console.log('Database synchronized successfully.');
         // Call the function to create the user
         await createInitialUser();

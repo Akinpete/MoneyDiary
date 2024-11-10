@@ -9,6 +9,7 @@ import authRoutes from './routes/authRouter.js';
 import authenticateToken from './middleware/protected.js';
 import variable_views from './middleware/variable_views.js';
 import BotInstance from './TelegramHandler/bot4.js';
+import * as total_txn from './utils/total_transactions.js';
 import { setDefaultResultOrder } from "node:dns";
 setDefaultResultOrder("ipv4first");
 
@@ -110,11 +111,84 @@ startApplication().catch(console.error);
 
 // routes
 app.get('/', (req, res) => res.render('home'));
-app.get('/home', authenticateToken, (req, res) => {
+app.get('/home', authenticateToken, async (req, res) => {
     const user = req.user;
-    res.locals.user_username = user.username;
-    res.render('login_home');
+    const db_user = await models.User.findOne({where: {id: user.id}});
+    const all_credit = await total_txn.all_credit(user.id);
+    const all_debit = await total_txn.all_debit(user.id);
+    if (db_user) { 
+        res.locals.photo_url = db_user.photo_url; //this is why I did the db lookup for user
+        res.locals.user_username = db_user.username; // If you also want to pass the username
+        if (!all_credit) {
+            res.locals.all_credit = "0.00";
+        } else {
+            res.locals.all_credit = all_credit.toFixed(2);
+        }
+        if (!all_debit) {
+            res.locals.all_debit = "0.00";
+        } else {
+            res.locals.all_debit = all_debit;
+        }
+        res.render('login_home'); 
+    } else { 
+        res.status(404).send('User not found'); 
+    } 
 });
+
+app.get('/recent_transaction', authenticateToken, async (req, res) => {
+    const user = req.user;
+    const recent_txn = await models.Transaction.findAll({
+        where: {
+            user_id: user.id
+        },
+        include: [
+            {
+                model: models.UserCategory,
+                as: 'usercategory',
+                include: [
+                    {
+                        model: models.Category,
+                        as: 'category',
+                        attributes: ['name']
+                    }
+                ],
+                attributes: [] // Ensure no extra fields from UserCategory
+            }
+        ],
+        limit: 3,
+        order: [['created_at', 'DESC']],
+        raw: true  // Order by 'createdAt' in ascending order
+    })
+    res.json(recent_txn);
+});
+
+app.get('/all_transaction', authenticateToken, async (req, res) => {
+    const user = req.user;
+    const all_txn = await models.Transaction.findAll({
+        where: {
+            user_id: user.id
+        },
+        include: [
+            {
+                model: models.UserCategory,
+                as: 'usercategory',
+                include: [
+                    {
+                        model: models.Category,
+                        as: 'category',
+                        attributes: ['name']
+                    }
+                ],
+                attributes: [] // Ensure no extra fields from UserCategory
+            }
+        ],
+        attributes: ['created_at', 'recipient', 'transaction_text', 'amount'],
+        order: [['created_at', 'DESC']],
+        raw: true // This will give you a flat structure
+    });
+
+    res.json(all_txn);
+})
 app.get('/transactions', authenticateToken, (req, res) => {
     const user = req.user;
     res.locals.user_username = user.username;
@@ -124,7 +198,12 @@ app.get('/transactions', authenticateToken, (req, res) => {
 app.get('/categories', authenticateToken, async (req, res) => {
     const user = req.user;
     res.locals.user_username = user.username;
-    const categories = await models.Category.findAll({ raw: true});
+    const categories = await models.Category.findAll({ 
+        where: {
+            is_public: true
+        },
+        raw: true
+    });
     res.locals.user_categories = categories;
     res.render('categories');
 });
@@ -133,6 +212,10 @@ app.post('/categories', authenticateToken, async (req, res) => {
     try {
         const selectedOptions = req.body;
         selectedOptions.pop();
+        if (!selectedOptions.includes("CREDIT ALERT")) { 
+            selectedOptions.push("CREDIT ALERT");
+        }
+
         const user = req.user;
         console.log(`SELECTED OPTIONS: ${selectedOptions}`);
       

@@ -10,6 +10,18 @@ class Category extends BaseModel {
             name: {
                 type: DataTypes.TEXT,
                 allowNull: false
+            },
+            is_public: {
+                type: DataTypes.BOOLEAN,
+                defaultValue: true  // true for preloaded categories, false for custom ones
+            },
+            user_id: {
+                type: DataTypes.UUID,
+                allowNull: true,    // Null for public categories, otherwise specific to the user
+                references: {
+                    model: 'User',
+                    key: 'id'
+                }
             }
         }, {
             sequelize,

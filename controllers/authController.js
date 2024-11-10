@@ -60,12 +60,16 @@ export const logout_get = (req, res) => {
 export const after_login_get = async (req, res) => {
     try {
         const authData = checkTelegramAuthorization(req.query);
+        if (!authData.username) {
+            authData.username = authData.first_name;
+        }
         let user = await models.User.findOne({ where: { telegram_id: authData.id } });
         if (!user) {
             // console.log('I NO SEE I WAN CREATE')
             user = await models.User.create({
                 telegram_id: authData.id,
-                username: authData.username              
+                username: authData.username,
+                photo_url: authData.photo_url           
             })
 
             if (user) {

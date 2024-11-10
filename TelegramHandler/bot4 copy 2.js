@@ -2,6 +2,7 @@ import { Telegraf, Markup } from 'telegraf';
 import dotenv from 'dotenv';
 import models from '../models/index.js';
 import * as transactionLoggerComposer from './tgcomposer.js';
+import runcheck from '../utils/transactions_helper.js';
 
 dotenv.config();
 
@@ -57,9 +58,26 @@ class BotInstance {
         return next();
     }
 
+    async isvalidLog(ctx, text, next) {
+        // const telegram_id = ctx.from?.id;
+        const response = await runcheck(text);
+        if (!response) {
+            return ctx.replyWithMarkdown(
+                `Invalid Input`,
+                Markup.inlineKeyboard([
+                    [Markup.button.command('💬 Please Try Again', 'logtransaction')]
+                ])
+            );
+        }
+        return next();
+
+    }
+
 
 
     setupHandlers() {
+        let transaction_text;
+        let cpyUser_categories;
         this.bot.start(
             async (ctx, next) => await this.requireAuth(ctx, next),
             async(ctx) => {
@@ -74,21 +92,6 @@ class BotInstance {
                 );
             }
         )
-    //     this.bot.start(this.requireAuth, async (ctx) => {
-    //         await ctx.replyWithMarkdown(
-    //          `🚀 Money Diary - AI Financial Assistant
-    
-    
-    // 💸 *Your trusted companion for managing finances:*
-    
-    // Simplify your money tracking with MoneyDiary. Log expenses, analyze spending, and stay on top of your finances in real-time.`,
-    //         Markup.inlineKeyboard([               
-    //            [Markup.button.url('💬 Official Channel', 'https://t.me/+IrHULPUINwA1ZDE0')],
-    //         //    [Markup.button.url('🎉 Announcement Channel', 'https://example.com/announcement-channel')],
-    //            [Markup.button.url('🌐 Website', 'https://akin-pete.tech')],
-    //          ])
-    //        );
-    //     });
 
         this.bot.command('logtransaction',
             async (ctx, next) => await this.requireAuth(ctx, next),
@@ -102,44 +105,64 @@ class BotInstance {
             }
         )
 
-        // this.bot.command('logtransaction', async (ctx) => {
-        //     ctx.reply('Log Your Transaction, Let\'s help you store them', {
-        //         reply_markup: {
-        //           force_reply: true,
-        //           input_field_placeholder: 'Type up to 100 characters...'
-        //         }
-        //     });
-
-        // });
-
         this.bot.on('text', async (ctx) => {
             const messageText = ctx.message.text;
             const telegram_id = ctx.from?.id;
-            const user = await models.User.findOne({ where: {user_telegram_id: telegram_id}});    
+            const user = await models.User.findOne({ where: {telegram_id: telegram_id}});    
             if (ctx.message.reply_to_message?.text === 'Log Your Transaction, Let\'s help you store them') {
                 if (messageText.length > 100) {
                     ctx.reply('Please limit your response to 100 characters.');                    
                 } else {
                     console.log(`User typed: ${messageText}`);
-                    const usercategories = await models.UserCategory.findAll({ where: { user_id: user.id }});
+                    transaction_text = messageText;                   
+                    const userCategories = await user.getCategories();
+                    cpyUser_categories = userCategories;
+                    for (const category of userCategories){
+                        console.log(`User is associated with category: ${category.name}`);
+                    }
+                    const inlineKeyboard = userCategories.map((category, index) => {
+                        return [Markup.button.callback(category.name, `option_${index + 1}`)];
+                      });
+
+                    inlineKeyboard.push([Markup.button.callback('Other', 'other')]);
+
                     ctx.reply(
                         'Please pick a category or type a custom category if none of these match:',
-                        Markup.inlineKeyboard([
-                            [Markup.button.callback('Option 1', 'option_1')],
-                            [Markup.button.callback('Option 2', 'option_2')],
-                            [Markup.button.callback('Option 3', 'option_3')],
-                            [Markup.button.callback('Option 4', 'option_4')],
-                            [Markup.button.callback('Other', 'other')] 
-                        ])
-                    );                 
+                        Markup.inlineKeyboard(inlineKeyboard)
+                    );
+                                    
                 }
             } else if (ctx.message.reply_to_message?.text === 'Please type your custom input below:') {
                 console.log(`Custom Category: ${messageText}`);
-                ctx.reply('I DON SAVE AM');
+                const newcategory = await models.Category.create({
+                    name: messageText,
+                    user_id: user.id,
+                    is_public: false
+                });
+                const newUsercategory = await models.UserCategory.create({ 
+                    user_id: user.id,
+                    category_id: newcategory.id
+                });
+                const response = await runcheck(transaction_text);
+                if (response) {
+                    const newTxn = await models.Transaction.create({
+                        transaction_text: response.text,
+                        transaction_type: response.type,
+                        amount: response.amount,
+                        recipient: response.recipient,
+                        user_id: user.id,
+                        usercategory_id: newUsercategory.id
+                    })
+                }
+                ctx.reply(`I have saved ${messageText} into your personal category list`);
             }
         });
 
         this.bot.action(/option_\d|other/, async (ctx) => {
+            // const messageText = ctx.message.text;
+            const telegram_id = ctx.from?.id;
+            const user = await models.User.findOne({ where: {telegram_id: telegram_id}});
+
             const selectedOption = ctx.match[0];
             console.log(`Button clicked: ${selectedOption}`);
             await ctx.editMessageReplyMarkup({ inline_keyboard: [] }).catch(() => {});
@@ -153,7 +176,28 @@ class BotInstance {
                     }
                 });
             } else {
-                await ctx.reply(`You selected: ${selectedOption.replace('_', ' ').toUpperCase()}`);                
+                const parsed_selectedOption = selectedOption.replace('_', ' ').toUpperCase();
+                await ctx.reply(`You selected: ${parsed_selectedOption}`);
+                const index = parseInt(parsed_selectedOption[parsed_selectedOption.length - 1]) - 1;
+                let selected_category;
+                if (!isNaN(index)) {
+                    selected_category = cpyUser_categories[index];
+                    const usercategory = await models.UserCategory.findOne({ where: { category_id: selected_category.id }});
+                    const response = await runcheck(transaction_text);
+                    if (response) {
+                        await models.Transaction.create({
+                            transaction_text: response.text,
+                            transaction_type: response.type,
+                            amount: response.amount,
+                            recipient: response.recipient,
+                            user_id: user.id,
+                            usercategory_id: usercategory.id
+                        });
+                    }                   
+
+                } 
+                await ctx.reply(`You selected: ${parsed_selectedOption}`);
+
             }
 
         });        

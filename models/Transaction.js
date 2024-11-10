@@ -13,7 +13,13 @@ class Transaction extends BaseModel {
       },
       transaction_type: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
+        validate: {
+          isIn: {
+            args: [['debit', 'credit']],
+            msg: "Transaction type must be either 'debit' or 'credit'"
+          }
+        }
       },
       amount: {
         type: DataTypes.DECIMAL,
