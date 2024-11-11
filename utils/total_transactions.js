@@ -21,7 +21,7 @@ export const all_debit = async (user_id) => {
 
         const total_debits = debits.reduce((acc, debit) => acc + parseFloat(debit.amount), 0);
 
-        return total_debits;
+        return total_debits.toFixed(2);
     } else {
         return null;
     }

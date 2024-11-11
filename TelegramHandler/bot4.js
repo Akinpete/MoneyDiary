@@ -1,11 +1,42 @@
 import { Telegraf, Markup } from 'telegraf';
 import { Op } from 'sequelize';
+import { sequelize } from '../models/index.js';
 import dotenv from 'dotenv';
 import models from '../models/index.js';
 import * as transactionLoggerComposer from './tgcomposer.js';
 import runcheck from '../utils/transactions_helper.js';
+import get_embeddings from '../utils/embed_helper.js';
+import { is_valid_query, generate_reply } from '../utils/query_helper.js';
+import { cosineDistance } from 'pgvector/sequelize';
 
 dotenv.config();
+
+// Function to clean the object and exclude specific properties like 'date.today'
+const cleanObject = (obj) => {
+  return Object.entries(obj)
+      .filter(([key, value]) => {
+          if (key === 'today' && value === obj.date?.today) {
+              return false; // Remove the 'date.today' field
+          }
+          if (Array.isArray(value)) {
+              return value.length > 0; // Keep non-empty arrays
+          }
+          if (value instanceof Object) {
+              // Recursively clean objects
+              return Object.keys(value).length > 0;
+          }
+          return value !== null && value !== ''; // Exclude null or empty string
+      })
+      .reduce((acc, [key, value]) => {
+          if (value instanceof Object) {
+              // If the value is an object, recursively clean it
+              acc[key] = cleanObject(value);
+          } else {
+              acc[key] = value;
+          }
+          return acc;
+      }, {});
+};
 
 class BotInstance {
     token = process.env.BOT_TOKEN;
@@ -102,8 +133,50 @@ Copy link to register below and paste on your browser`,
             );
         }
         return next();
-
     }
+
+    async isvalidQuery(ctx, text, next) {
+      const response = await is_valid_query(text); // Call to your validation function
+  
+      if (!response) {
+          await ctx.reply(
+              'Invalid Query',
+              {
+                  reply_markup: {
+                      inline_keyboard: [
+                          [{ text: '🔄 Please Try Again', callback_data: 'start' }]
+                      ]
+                  }
+              }
+          );
+          return; // Stop further processing if the query is invalid
+      }
+  
+      // Attach the response to ctx.state so that it can be accessed in the next middleware or route handler
+      ctx.state.queryResponse = response;
+  
+      // Call the next middleware in the chain
+      return next();
+    }
+  
+
+  //   async isvalidQuery(ctx, text, next) {
+  //     // const telegram_id = ctx.from?.id;
+  //     const response = await is_valid_query(text);
+  //     if (!response) {
+  //         return ctx.reply(
+  //             'Invalid Query',
+  //             {
+  //                 reply_markup: {
+  //                     inline_keyboard: [[
+  //                         { text: '🔄 Please Try Again', callback_data: 'start' }
+  //                     ]]
+  //                 }
+  //             }
+  //         );
+  //     }
+  //     return next();
+  // }
 
 
 
@@ -144,7 +217,7 @@ Copy link to register below and paste on your browser`,
               ctx.reply('Ask AI what you want to know', {
                   reply_markup: {
                       force_reply: true,
-                      input_field_placeholder: 'Type up to 60 characters...'
+                      input_field_placeholder: 'Type up to 50 characters...'
                   }
               });
           }
@@ -224,6 +297,22 @@ Copy link to register below and paste on your browser`,
                     user_id: user.id,
                     usercategory_id: newUsercategory.id
                   });
+
+                  const txn_data = {
+                    transaction_type: response.type,
+                    amount: response.amount,
+                    recipient: response.recipient
+                  }
+
+                  const embed = await get_embeddings(response.text + JSON.stringify(txn_data));
+                  if (embed) {
+                    const new_embd = await models.Embedding.create({
+                      data: embed,
+                      transaction_id: newTxn.id
+                    });
+                  }
+
+
                 }
                 ctx.reply(`I have created and saved ${messageText} into your personal category list`);
                 await ctx.reply(`Transaction Saved`);
@@ -257,12 +346,93 @@ Copy link to register below and paste on your browser`,
                     user_id: user.id,
                     usercategory_id: newUsercategory.id
                   });
+
+                  const embed = await get_embeddings(response.text);
+                  if (embed) {
+                    const new_embd = await models.Embedding.create({
+                      data: embed,
+                      transaction_id: newTxn.id
+                    });
+                  }
                 }
 
                 ctx.reply(`I have saved ${messageText} into your personal category list`);
                 await ctx.reply(`Transaction Saved`);
                 return;
               }
+            } else if (ctx.message.reply_to_message?.text === 'Ask AI what you want to know') {
+              if (messageText.length > 50) {
+                ctx.reply('Please limit your response to 50 characters.');                    
+              } else {
+                try {
+                  await this.isvalidQuery(ctx, messageText, async () => {
+                    console.log(`User queried: ${messageText}`);
+                    // Access the response that was attached to ctx.state
+                    const queryResponse = ctx.state.queryResponse;
+                    console.log(`CTX STATE: ${queryResponse.context}`)
+                    if (queryResponse) {
+                      const add_data = cleanObject(queryResponse);
+                      const combinedText = messageText + ' ' + JSON.stringify(add_data);
+                      const query_embed = await get_embeddings(combinedText);
+
+                      if (query_embed) {
+                        const items = await models.Embedding.findAll({
+                          order: cosineDistance('data', query_embed, sequelize),
+                          limit: 20
+                        });
+
+                        if (items) {
+                          const validTxnid = [];
+                          items.forEach(instance => { 
+                            console.log(instance.transaction_id);
+                            validTxnid.push(instance.transaction_id);
+                          });
+                          const txns = [];
+                          for (const id of validTxnid) {
+                            const Txn = await models.Transaction.findOne({ 
+                              where: { 
+                                id: id
+                              }
+                            });
+                            txns.push(Txn); // Add each transaction to the array
+                          }
+                          
+                          const Txn_details = [];
+                          let transaction_details;
+                          if (txns.length !== 0) {
+                            for (const txn of txns) {
+                              transaction_details = {
+                                transaction_text: txn.transaction_text,
+                                transaction_type: txn.transaction_type,
+                                amount: txn.amount,
+                                recipient: txn.recipient
+                              }
+                              Txn_details.push(transaction_details);                              
+                            }
+
+                            if (Txn_details.length !== 0) {
+                              const reply = await generate_reply(messageText, JSON.stringify(Txn_details));
+                              ctx.reply(reply);
+                            }                          
+
+                          }
+
+                        } else {
+                          console.log('I TRIED MY BEST');
+                        }
+                      }
+
+                    }
+
+                    
+                  })
+                } catch (error) {
+                  console.error('Error in validating query:', error);
+                  return ctx.reply('An error occurred while processing your query.');
+                }
+              }
+
+              
             }
         });
 
@@ -301,7 +471,7 @@ Copy link to register below and paste on your browser`,
                         response_type = 'debit';
                       }
                       try {
-                        await models.Transaction.create({
+                        const newTxn = await models.Transaction.create({
                           transaction_text: response.text,
                           transaction_type: response_type,
                           amount: response.amount,
@@ -309,6 +479,14 @@ Copy link to register below and paste on your browser`,
                           user_id: user.id,
                           usercategory_id: usercategory.id
                         });
+
+                        const embed = await get_embeddings(response.text);
+                        if (embed) {
+                          const new_embd = await models.Embedding.create({
+                            data: embed,
+                            transaction_id: newTxn.id
+                          });
+                        }
 
                         await ctx.reply(`Transaction Saved`);
                       } catch (error) {
