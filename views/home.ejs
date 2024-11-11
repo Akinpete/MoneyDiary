@@ -1,15 +1,184 @@
 <%- include('partials/header'); -%>
 
-<header>
-  <div class="smoothie">
-    <img src="/smoothie.png" alt="">
-  </div>
-  <div class="headings">
-    <h2>Smoothie Recipes</h2>
-    <h3>By Ninjas For Ninjas</h3>
-    <a href="/smoothies" class="btn">View Recipes</a>
-  </div>
-</header>
+    <!-- Announcement Banner Section -->
+    <section id="announcement" class="bg-custom-green text-white py-3 mt-16">
+        <div class="max-w-7xl mx-auto text-center px-4">
+            <p class="text-sm">
+                Seamless Login! No Username/Password! 🎉
+            </p>
+        </div>
+    </section>
+
+    <!-- Hero Section -->
+    <section id="hero" class="py-12 md:py-20 bg-gradient-to-b from-blue-50 to-white">
+        <div class="max-w-3xl mx-auto flex flex-col items-center text-center px-6">
+            <h1 class="text-4xl md:text-5xl text-custom-green mb-6 md:mb-8 leading-tight">
+                We make <br>
+                <span class="text-custom-green-hover ">Personal Finance & <br />
+                Spending Tracking</span>  work for everyone
+            </h1>
+            <p class="text-black-600 text-lg md:text-xl mb-8 md:mb-12 leading-relaxed">
+                MoneyDiary helps you track your spending, stay on top of your budget, and understand where your money goes.
+
+                <!-- With intuitive tools for logging expenses and automated summaries, MoneyDiary makes personal finance simple and accessible, 
+                no matter your financial goals. -->
+            </p>
+            <div class="flex flex-row gap-4 items-center justify-center" >
+                <a 
+                href="/login" id="telegramConnect" class="bg-custom-green-hover text-white px-6 md:px-8 py-3 rounded-full hover:bg-custom-green transition-colors text-sm md:text-base text-center inline-block">
+                Connect Your Telegram Account
+                </a>
+                <!-- <a 
+                href="https://t.me/MoneyDiarybot" id="BotConnect" class="bg-white outline outline-2 text-custom-green px-6 md:px-8 py-3 rounded-full hover:bg-custom-green-hover transition-colors text-sm md:text-base text-center inline-block">
+                See our Telegram Bot
+                </a> -->
+            </div>
+            <a 
+            href="https://t.me/MoneyDiarybot" id="BotConnect" class="text-custom-green px-6 md:px-8 py-3 hover:underline font-bold transition-colors text-sm md:text-base text-center inline-block">
+            See our Telegram Bot >>>
+            </a>
+            <!-- <button 
+                id="telegramConnect" 
+                class="bg-custom-green-hover text-white px-6 md:px-8 py-3 rounded-full hover:bg-custom-green transition-colors text-sm md:text-base">
+                Connect Your Telegram Account
+            </button> -->
+        </div>
+    </section>
+    
 
 
+    <!-- FAQ Section -->
+    <section id="faq" class="py-16 bg-white">
+        <div class="max-w-3xl mx-auto px-4">
+            <div class="mb-12">
+                <h4 class="text-sm text-gray-600 mb-2">FAQ</h4>
+                <h2 class="text-3xl font-bold">Frequently asked questions</h2>
+            </div>
+
+            <div class="space-y-4">
+                <!-- FAQ Item 1 -->
+                <div class="border-b border-gray-200">
+                    <button class="faq-toggle w-full text-left py-4 pr-8 focus:outline-none relative group">
+                        <span class="text-lg font-medium">How does MoneyDiary track my spending?</span>
+                        <span class="absolute right-0 top-1/2 transform -translate-y-1/2 transition-transform group-[.active]:rotate-45">
+                            <svg width="24" height="24" fill="none" stroke="currentColor">
+                                <path d="M12 5v14M5 12h14" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </span>
+                    </button>
+                    <div class="faq-content hidden pb-4 text-gray-600">
+                        MoneyDiary captures your expenses through simple messages on Telegram, automatically categorizing your spending so you can easily review your financial activity.
+                    </div>
+                </div>
+
+                <!-- FAQ Item 2 -->
+                <div class="border-b border-gray-200">
+                    <button class="faq-toggle w-full text-left py-4 pr-8 focus:outline-none relative group">
+                        <span class="text-lg font-medium">How does MoneyDiary keep my account secure without a username and password?</span>
+                        <span class="absolute right-0 top-1/2 transform -translate-y-1/2 transition-transform group-[.active]:rotate-45">
+                            <svg width="24" height="24" fill="none" stroke="currentColor">
+                                <path d="M12 5v14M5 12h14" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </span>
+                    </button>
+                    <div class="faq-content hidden pb-4 text-gray-600">
+                        MoneyDiary leverages Telegram’s secure authentication to log you in, eliminating the need for a separate username and password. Telegram’s encryption and secure login flow protect your account, while MoneyDiary adds an additional layer of security by verifying your identity every time you log a transaction. This way, you get the convenience of password-free access with robust security safeguards.
+
+                    </div>
+                </div>
+
+                <!-- FAQ Item 3 -->
+                <div class="border-b border-gray-200">
+                    <button class="faq-toggle w-full text-left py-4 pr-8 focus:outline-none relative group">
+                        <span class="text-lg font-medium">How does MoneyDiary protect my data?</span>
+                        <span class="absolute right-0 top-1/2 transform -translate-y-1/2 transition-transform group-[.active]:rotate-45">
+                            <svg width="24" height="24" fill="none" stroke="currentColor">
+                                <path d="M12 5v14M5 12h14" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </span>
+                    </button>
+                    <div class="faq-content hidden pb-4 text-gray-600">
+                        Your security is our priority. MoneyDiary uses secure data storage practices and follows industry standards to keep your information safe.
+                </div>
+
+                <!-- FAQ Item 4 -->
+                <div class="border-b border-gray-200">
+                    <button class="faq-toggle w-full text-left py-4 pr-8 focus:outline-none relative group">
+                        <span class="text-lg font-medium">How do I stay consistent with logging my expenses?</span>
+                        <span class="absolute right-0 top-1/2 transform -translate-y-1/2 transition-transform group-[.active]:rotate-45">
+                            <svg width="24" height="24" fill="none" stroke="currentColor">
+                                <path d="M12 5v14M5 12h14" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </span>
+                    </button>
+                    <div class="faq-content hidden pb-4 text-gray-600">
+                        MoneyDiary makes it easy to stay on top of your finances with reminders and simple logging through Telegram. By logging each expense as you go, you’ll get a clear picture of your spending patterns and see where you can save.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pre-footer CTA Section -->
+    <section id="pre-footer-cta" class="bg-custom-green py-20 md:py-32">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="max-w-3xl mx-auto text-center">
+                <h2 class="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
+                    Take control <br>of your finances
+                    one <br>expense <span class="italic text-custom-green-hover"  >at a time</span>
+                </h2>
+                <p class="text-gray-200 text-lg md:text-xl mb-10">
+                    Discover how MoneyDiary can help you <br>stay on budget,
+                    save more, and achieve your <br>financial dreams.
+                </p>
+                <a href="/login" class="bg-white text-custom-green px-8 py-4 rounded-full hover:bg-custom-green-hover transition-colors text-base font-medium inline-block"> Get Started Now
+                </a>
+                <!-- <button 
+                    class="bg-white text-custom-green px-8 py-4 rounded-full hover:bg-gray-100 transition-colors text-base font-medium inline-block">
+                    Get Started Now
+                </button> -->
+            </div>
+        </div>
+    </section>
+    <script>
+        // Mobile menu functionality
+        const menuButton = document.getElementById('menuButton');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const menuOpenIcon = document.querySelector('.menu-open');
+        const menuCloseIcon = document.querySelector('.menu-close');
+
+        menuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+            menuOpenIcon.classList.toggle('hidden');
+            menuCloseIcon.classList.toggle('hidden');
+        });
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!menuButton.contains(e.target) && !mobileMenu.contains(e.target)) {
+                mobileMenu.classList.add('hidden');
+                menuOpenIcon.classList.remove('hidden');
+                menuCloseIcon.classList.add('hidden');
+            }
+        });
+        // FAQ Functionality
+        document.querySelectorAll('.faq-toggle').forEach(button => {
+            button.addEventListener('click', () => {
+                // Toggle active class on the button
+                button.classList.toggle('active');
+        
+                // Find the content div
+                const content = button.nextElementSibling;
+        
+                // Toggle visibility
+                if (content.style.maxHeight) {
+                    content.style.maxHeight = null;
+                    content.classList.add('hidden');
+                } else {
+                    content.classList.remove('hidden');
+                    content.style.maxHeight = content.scrollHeight + "px";
+                }
+            });
+        });
+    </script>
 <%- include('partials/footer'); -%>

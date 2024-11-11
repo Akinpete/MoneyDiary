@@ -19,6 +19,15 @@ class User extends BaseModel {
             allowNull: false,
             unique: true
         },
+        photo_url: { 
+          type: DataTypes.STRING, 
+          allowNull: true, 
+          validate: { 
+            isUrl: { 
+              msg: "Must be a valid URL" 
+            } 
+          } 
+        },
         // password_hash: {
         //     type: DataTypes.TEXT,
         //     allowNull: false,
@@ -45,6 +54,18 @@ class User extends BaseModel {
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE'
     });
+
+    this.belongsToMany(models.Category, { 
+      through: 'UserCategory',
+      foreignKey: 'user_id'
+    });
+
+    // this.belongsTo(models.Category, {
+    //   foreignKey: 'category_id',
+    //   as: 'categories'
+    // })
+
+    
   }
 }
 

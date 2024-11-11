@@ -1,4 +1,4 @@
-import { Sequelize } from 'sequelize';
+import { Sequelize, Op } from 'sequelize';
 import pgvector from 'pgvector/sequelize';
 import config from '../config/database.js';  // Your config file
 
@@ -11,6 +11,7 @@ const sequelize = new Sequelize(
   dbConfig.database,
   dbConfig.username,
   dbConfig.password,
+  {dialect: 'postgres'},
   dbConfig
 );
 

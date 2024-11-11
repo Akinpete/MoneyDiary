@@ -9,7 +9,7 @@ class Embedding extends BaseModel {
     return this.init({
         ...baseAttr,
       data: {
-        type: DataTypes.VECTOR(3), // 3-dimensional vector
+        type: DataTypes.VECTOR(1536), // OpenAi vector 1536-dimensional
         allowNull: false
       },
       transaction_id: {

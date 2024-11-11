@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoneyDiary - Home</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'custom-green': '#1B352B',
+                        'custom-green-hover': '#2ec61c'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-b from-blue-50 to-white">
+    <!-- Mobile Header -->
+    <header class="lg:hidden flex justify-between items-center p-4 bg-white border-b">
+        <button class="text-2xl" id="mobileMenuBtn">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h1 class="text-xl font-semibold">Home</h1>
+        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+            <img src="<%= photo_url %>" alt="PA" class="w-full h-full object-cover rounded-full">
+        </div>
+    </header>
+
+    <div class="flex h-[calc(100vh-56px)] lg:h-screen">
+        <!-- Sidebar - hidden on mobile by default -->
+        <aside id="sidebar" class="hidden lg:block w-64 bg-custom-green text-white fixed lg:relative h-full z-50">
+            <div class="p-6">
+                <a href="/">
+                    <div class="text-white font-bold text-2xl">MoneyDiary</div>
+                </a>
+                
+                <nav class="space-y-4 mt-6">
+                    <a href="/home" class="flex items-center space-x-3 text-white hover:text-custom-green-hover">
+                        <i class="fas fa-home"></i>
+                        <span>Home</span>
+                    </a>
+                    <a href="/transactions" class="flex items-center space-x-3 text-white hover:text-custom-green-hover">
+                        <i class="fas fa-exchange-alt"></i>
+                        <span>All Transactions</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 text-gray-300 hover:text-white">
+                        <i class="fas fa-users"></i>
+                        <span>Recipients</span>
+                    </a> 
+                    <a href="/logout" class="flex items-center space-x-3 bg-red-500 hover:bg-red-900 p-2 rounded-md text-white hover:text-red-300">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </a>                    
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-4 lg:p-8 overflow-y-auto">
+            <!-- Welcome Message -->
+            <div class="mb-6">
+                <h1 class="text-xl font-semibold mb-2">Welcome, <%= user_username %>!🌍</h1>
+            </div>
+
+            <div class="bg-black text-white rounded-xl p-6 mb-6 relative overflow-hidden">
+                <!-- Main Container -->
+                <div class="flex justify-between gap-8">
+                    <!-- Debit Section -->
+                    <div class="flex-1">
+                        <button class="bg-gray-800 text-white px-4 py-2 rounded-lg flex items-center space-x-2 mb-3 w-full">
+                            <span>Outflow</span>
+                        </button>
+                        <div class="flex items-center space-x-2">
+                            <h2 class="text-2xl font-bold">₦<%= all_debit %></h2>
+                        </div>
+                    </div>
+            
+                    <!-- Credit Section -->
+                    <div class="flex-1">
+                        <button class="bg-gray-800 text-white px-4 py-2 rounded-lg flex items-center space-x-2 mb-3 w-full">
+                            <span>Inflow</span>
+                        </button>
+                        <div class="flex items-center space-x-2">
+                            <h2 class="text-2xl font-bold">₦<%= all_credit %></h2>
+                        </div>
+                    </div>
+                </div>
+            
+                <!-- Decorative Dollar Sign -->
+                <div class="absolute right-0 bottom-0 opacity-10">
+                    <i class="fas fa-dollar-sign text-9xl"></i>
+                </div>
+            </div>
+
+            <!-- Recent Transactions -->
+            <div class="bg-white rounded-xl p-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-semibold">Recent Transactions</h3>
+                    <a href="/transactions" class="text-blue-600">See All</a>
+                </div>
+
+                <div class="space-y-4" id="recentTransactions">
+                    <!-- Transaction items will be inserted here by JavaScript -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Mobile Chat Button -->
+    <!-- <button class="lg:hidden fixed bottom-4 right-4 w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-white shadow-lg">
+        <i class="fas fa-comments"></i>
+    </button> -->
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const sidebar = document.getElementById('sidebar');
+        let recent_txn;
+        
+        mobileMenuBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('hidden');
+        });
+
+        fetch('/recent_transaction', {
+            method: 'GET'
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.length === 0) {
+                    console.log('No recent transactions found.');
+                }
+                recent_txn = data;
+                renderRecentTransactions(data);                 
+            })
+            .catch(error => {
+                console.error('Error fetching recent transactions:', error);
+            });
+
+
+        // // Sample recent transactions
+        // const recentTransactions = [
+        //     {
+        //         type: 'Transfer to Peter Akinpelumi',
+        //         date: 'November 2, 2024 5:36pm',
+        //         amount: -30.00,
+        //         status: 'Completed'
+        //     },
+        //     {
+        //         type: 'Transfer to Peter Akinpelumi',
+        //         date: 'October 31, 2024 12:55pm',
+        //         amount: -30.00,
+        //         status: 'Completed'
+        //     },
+        //     {
+        //         type: 'Transfer to Peter Akinpelumi',
+        //         date: 'October 29, 2024 2:12pm',
+        //         amount: -60.00,
+        //         status: 'Completed'
+        //     }
+        // ];
+        
+        function formatISODate(isoString) {
+            const dateObj = new Date(isoString);
+            const year = dateObj.getFullYear(); 
+            const month = (dateObj.getMonth() + 1).toString().padStart(2, '0'); // Months are zero-based 
+            const day = dateObj.getDate().toString().padStart(2, '0'); 
+
+            let hours = dateObj.getHours();
+            const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+            const amPm = hours >= 12 ? 'PM' : 'AM';
+
+            hours = (hours % 12) || 12; // Convert to 12-hour format, setting '12' for midnight and noon
+            const formattedHours = hours.toString().padStart(2, '0'); // Ensure two digits for hours
+
+            return `${year}-${month}-${day} ${formattedHours}:${minutes} ${amPm}`;
+        }
+
+// Example usage:
+console.log(formatISODate('2024-11-10T02:00:00Z')); // "2024-11-10 02:00 AM"
+
+
+        console.log(recent_txn[0]);
+
+        // Render recent transactions
+        function renderRecentTransactions(recent_txn) {
+            const container = document.getElementById('recentTransactions');
+            if (recent_txn.length === 0) {
+                container.innerHTML = '<p>Nothing to see here, Start logging your transactions asap!'
+            } else {
+                container.innerHTML = recent_txn.map(tx => `
+                    <div class="flex items-center justify-between p-2">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-arrow-right text-gray-600"></i>
+                            </div>
+                            <div>
+                                <div class="font-medium">${tx['transaction_text']}</div>
+                                <div class="text-sm text-gray-500">${formatISODate(tx['created_at'])}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-medium">${tx['amount']}
+                            </div>
+                            <div class="text-sm text-green-600">${tx['usercategory.category.name']}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+    </script>
+
+<%- include('partials/footer'); -%>
