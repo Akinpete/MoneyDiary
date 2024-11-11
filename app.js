@@ -7,9 +7,10 @@ import initializeDatabase from './index.js';
 import models from './models/index.js';
 import authRoutes from './routes/authRouter.js';
 import authenticateToken from './middleware/protected.js';
-import variable_views from './middleware/variable_views.js';
 import BotInstance from './TelegramHandler/bot4.js';
 import * as total_txn from './utils/total_transactions.js';
+import txnRoutes from './routes/txnRouter.js';
+import categoryRoutes from './routes/categoryRouter.js';
 import { setDefaultResultOrder } from "node:dns";
 setDefaultResultOrder("ipv4first");
 
@@ -23,7 +24,6 @@ const PORT = process.env.PORT;
 app.use(express.static('public'));
 app.use(cookieParser());
 app.use(express.json());
-app.use(variable_views);
 
 
 //view engine
@@ -122,7 +122,7 @@ app.get('/home', authenticateToken, async (req, res) => {
         if (!all_credit) {
             res.locals.all_credit = "0.00";
         } else {
-            res.locals.all_credit = all_credit.toFixed(2);
+            res.locals.all_credit = all_credit;
         }
         if (!all_debit) {
             res.locals.all_debit = "0.00";
@@ -134,123 +134,7 @@ app.get('/home', authenticateToken, async (req, res) => {
         res.status(404).send('User not found'); 
     } 
 });
-
-app.get('/recent_transaction', authenticateToken, async (req, res) => {
-    const user = req.user;
-    const recent_txn = await models.Transaction.findAll({
-        where: {
-            user_id: user.id
-        },
-        include: [
-            {
-                model: models.UserCategory,
-                as: 'usercategory',
-                include: [
-                    {
-                        model: models.Category,
-                        as: 'category',
-                        attributes: ['name']
-                    }
-                ],
-                attributes: [] // Ensure no extra fields from UserCategory
-            }
-        ],
-        limit: 3,
-        order: [['created_at', 'DESC']],
-        raw: true  // Order by 'createdAt' in ascending order
-    })
-    res.json(recent_txn);
-});
-
-app.get('/all_transaction', authenticateToken, async (req, res) => {
-    const user = req.user;
-    const all_txn = await models.Transaction.findAll({
-        where: {
-            user_id: user.id
-        },
-        include: [
-            {
-                model: models.UserCategory,
-                as: 'usercategory',
-                include: [
-                    {
-                        model: models.Category,
-                        as: 'category',
-                        attributes: ['name']
-                    }
-                ],
-                attributes: [] // Ensure no extra fields from UserCategory
-            }
-        ],
-        attributes: ['created_at', 'recipient', 'transaction_text', 'amount'],
-        order: [['created_at', 'DESC']],
-        raw: true // This will give you a flat structure
-    });
-
-    res.json(all_txn);
-})
-app.get('/transactions', authenticateToken, (req, res) => {
-    const user = req.user;
-    res.locals.user_username = user.username;
-    res.render('transactions');
-});
-
-app.get('/categories', authenticateToken, async (req, res) => {
-    const user = req.user;
-    res.locals.user_username = user.username;
-    const categories = await models.Category.findAll({ 
-        where: {
-            is_public: true
-        },
-        raw: true
-    });
-    res.locals.user_categories = categories;
-    res.render('categories');
-});
-
-app.post('/categories', authenticateToken, async (req, res) => {
-    try {
-        const selectedOptions = req.body;
-        selectedOptions.pop();
-        if (!selectedOptions.includes("CREDIT ALERT")) { 
-            selectedOptions.push("CREDIT ALERT");
-        }
-
-        const user = req.user;
-        console.log(`SELECTED OPTIONS: ${selectedOptions}`);
-      
-        // Save each option as a separate row in the Category table
-        for (const option of selectedOptions) {
-            const category = await models.Category.findOne({ where: { name: option }});
-            
-            if (!category) {
-                // Handle case where category doesn't exist
-                console.log(`Category ${option} not found`);
-                continue; // Skip to next iteration
-            }
-
-            // Try to create the user-category association
-            try {
-                await models.UserCategory.create({ 
-                    name: option,
-                    user_id: user.id,
-                    category_id: category.id
-                });
-            } catch (err) {
-                if (err.name === 'SequelizeUniqueConstraintError') {
-                    // This user-category association already exists, just skip it
-                    console.log(`User already has category ${option}`);
-                    continue;
-                }
-                throw err; // Re-throw if it's a different error
-            }
-        }
-
-        res.render('home');
-    } catch (error) {
-        console.error('Error creating categories:', error);
-        res.status(500).json({ message: 'Error creating categories' });
-    }
-});
 app.use(authRoutes);
+app.use(txnRoutes);
+app.use(categoryRoutes);
 

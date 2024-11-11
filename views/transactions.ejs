@@ -64,25 +64,25 @@
         <main class="flex-1 p-4 lg:p-8 overflow-y-auto">
             <!-- Tabs -->
             <div class="flex space-x-2 mb-6 bg-gray-100 p-1 rounded-lg">
-                <a href="#" class="flex-1 px-4 py-2 bg-custom-green-hover text-white text-center font-bold hover:bg-custom-green rounded-md text-sm">All</a>                
-                <a href="#" class="flex-1 px-4 py-2 bg-custom-green-hover text-white text-center font-bold hover:bg-custom-green rounded-md text-sm">Debits</a>
-                <a href="#" class="flex-1 px-4 py-2 bg-custom-green-hover text-white text-center font-bold hover:bg-custom-green rounded-md text-sm">Credits</a>
+                <a href="#" id="allButton" class="flex-1 px-4 py-2 bg-custom-green-hover text-white text-center font-bold hover:bg-custom-green rounded-md text-sm">All</a>                
+                <a href="#" id="debitButton"class="flex-1 px-4 py-2 bg-custom-green-hover text-white text-center font-bold hover:bg-custom-green rounded-md text-sm">Debits</a>
+                <a href="#" id="creditButton"class="flex-1 px-4 py-2 bg-custom-green-hover text-white text-center font-bold hover:bg-custom-green rounded-md text-sm">Credits</a>
             </div>
 
             <!-- Search -->
-            <div class="mb-6">
+            <!-- <div class="mb-6">
                 <div class="relative">
                     <input type="text" placeholder="Search transaction" 
                            class="w-full p-3 pl-10 border rounded-lg bg-white">
                     <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                 </div>
-            </div>
+            </div> -->
 
             <!-- Transactions List -->
             <div class="bg-white rounded-lg">
                 <div class="flex justify-between items-center p-4">
                     <h2 class="text-lg font-semibold">All Transactions</h2>
-                    <button class="px-4 py-1.5 border rounded-lg hover:bg-gray-50 text-sm">Export</button>
+                    <!-- <button class="px-4 py-1.5 border rounded-lg hover:bg-gray-50 text-sm">Export</button> -->
                 </div>
                 
                 <div class="overflow-x-auto">
@@ -96,7 +96,7 @@
                                 <th class="p-4 text-left font-medium text-blue-600">Recipient</th>
                                 <th class="p-4 text-left font-medium">Description</th>
                                 <th class="p-4 text-left font-medium">Amount</th>
-                                <th class="p-4 text-left font-medium">Status</th>
+                                <th class="p-4 text-left font-medium">Category</th>
                             </tr>
                         </thead>
                         <tbody id="transactionTableBody">
@@ -114,6 +114,7 @@
     </button>
 
     <script>
+        let all_transaction;
         // Mobile menu toggle
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const sidebar = document.getElementById('sidebar');
@@ -121,51 +122,161 @@
         mobileMenuBtn.addEventListener('click', () => {
             sidebar.classList.toggle('hidden');
         });
+        
+        // Handle Clicks
+        const allButton = document.getElementById('allButton'); 
+        const debitButton = document.getElementById('debitButton'); 
+        const creditButton = document.getElementById('creditButton');
+        const deleteButton = document.getElementById('deleteButton');
 
-        // Sample transaction data
-        const transactions = [
-            {
-                date: '2024-11-02',
-                recipient: 'Peter Akinpelumi',
-                description: 'International transfer',
-                amount: 30.00,
-                status: 'Completed'
-            },
-            {
-                date: '2024-10-31',
-                recipient: 'Peter Akinpelumi',
-                description: 'International transfer',
-                amount: 30.00,
-                status: 'Completed'
-            },
-            // Add more transactions as needed
-        ];
 
-        function formatDate(dateStr) {
-            const date = new Date(dateStr);
-            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        // Function to handle button click 
+        function handleButtonClick(event) { 
+            // Remove active class from all buttons 
+            allButton.classList.remove('bg-custom-green', 'text-white'); 
+            debitButton.classList.remove('bg-custom-green', 'text-white'); 
+            creditButton.classList.remove('bg-custom-green', 'text-white'); 
+            
+            // Add active class to clicked button 
+            event.target.classList.add('bg-custom-green', 'text-white');
+
+            // Handle specific button clicks 
+            if (event.target === debitButton) { 
+                const debitTransactions = all_transaction.filter(txn => txn.transaction_type === 'debit');
+                renderTransactions(debitTransactions);
+                // Add your specific handling for debitButton here
+            } else if (event.target === creditButton) { 
+                const creditTransactions = all_transaction.filter(txn => txn.transaction_type === 'credit');
+                renderTransactions(creditTransactions); 
+                // Add your specific handling for creditButton here 
+            } else { 
+                console.log('All button clicked'); 
+                renderTransactions(all_transaction);
+                // Reset all button to default or handle it as needed 
+            }
         }
 
-        function renderTransactions() {
+        // Add click event listeners to buttons 
+        allButton.addEventListener('click', handleButtonClick); 
+        debitButton.addEventListener('click', handleButtonClick); 
+        creditButton.addEventListener('click', handleButtonClick);
+
+        
+
+
+        fetch('/all_transaction', {
+            method: 'GET'
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.length === 0) {
+                    console.log('No transactions found.');
+                }
+                console.log(data);
+                all_transaction = data;                
+                renderTransactions(data);                 
+            })
+            .catch(error => {
+                console.error('Error fetching all transactions:', error);
+            });
+
+
+            function formatISODate(isoString) {
+                const dateObj = new Date(isoString);
+                const year = dateObj.getFullYear(); 
+                const month = (dateObj.getMonth() + 1).toString().padStart(2, '0'); // Months are zero-based 
+                const day = dateObj.getDate().toString().padStart(2, '0'); 
+
+                let hours = dateObj.getHours();
+                const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+                const amPm = hours >= 12 ? 'PM' : 'AM';
+
+                hours = (hours % 12) || 12; // Convert to 12-hour format, setting '12' for midnight and noon
+                const formattedHours = hours.toString().padStart(2, '0'); // Ensure two digits for hours
+
+                return `${year}-${month}-${day} ${formattedHours}:${minutes} ${amPm}`;
+            }
+
+        function renderTransactions(all_txn) {
             const tbody = document.getElementById('transactionTableBody');
-            tbody.innerHTML = transactions.map(tx => `
-                <tr class="border-b hover:bg-gray-50">
-                    <td class="p-4"><input type="checkbox" class="rounded"></td>
-                    <td class="p-4">${formatDate(tx.date)}</td>
-                    <td class="p-4 text-blue-600">${tx.recipient}</td>
-                    <td class="p-4">${tx.description}</td>
-                    <td class="p-4">$${tx.amount.toFixed(2)}</td>
-                    <td class="p-4">
-                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                            ${tx.status}
-                        </span>
-                    </td>
-                </tr>
-            `).join('');
+            if (all_txn.length === 0) {
+                tbody.innerHTML = '<p>Nothing to see here, Start logging your transactions asap!'
+            } else {
+
+                tbody.innerHTML = all_txn.map(tx => `
+                    <tr class="border-b hover:bg-gray-50 data-transaction-id="${tx.id}">
+                        <td class="p-4"><input type="checkbox" class="transaction-checkbox rounded data-transaction-id="${tx.id}"></td>
+                        <td class="p-4">${formatISODate(tx['created_at'])}</td>
+                        <td class="p-4 text-blue-600">${tx['recipient']}</td>
+                        <td class="p-4">${tx['transaction_text']}</td>
+                        <td class="p-4">₦${tx['amount']}</td>
+                        <td class="p-4">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                             ${tx['usercategory.category.name']}
+                            </span>
+                        </td>
+                        <td>
+                            <button 
+                            class="delete-button flex-1 px-4 py-2 bg-red-300 text-white text-center font-bold hover:bg-red-700 rounded-md text-sm hidden"
+                            data-transaction-id="${tx.id}">
+                            Delete
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+
+                addCheckboxListeners();
+            }
         }
 
-        // Initialize the table
-        renderTransactions();
+        function addCheckboxListeners() {
+            const rows = document.querySelectorAll('#transactionTableBody tr');
+    
+            rows.forEach(row => {
+                const checkbox = row.querySelector('.transaction-checkbox');
+                const deleteButton = row.querySelector('.delete-button');
+        
+                if (checkbox && deleteButton) {
+                    checkbox.addEventListener('change', () => {
+                        // Toggle delete button visibility based on checkbox state
+                        deleteButton.classList.toggle('hidden', !checkbox.checked);
+                    });
+                    
+                    deleteButton.addEventListener('click', async (e) => {
+                        e.preventDefault();
+                        const transactionId = deleteButton.dataset.transactionId;
+                        // console.log(transactionId);
+                
+                        try {
+                            const response = await fetch('/transactions', {
+                                method: 'DELETE',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    // Add any auth headers if needed
+                                    // 'Authorization': `Bearer ${yourAuthToken}`
+                                },
+                                body: JSON.stringify({ id:transactionId }),
+                            });
+
+                            if (response.ok) {
+                                // Remove the row from the table
+                                row.remove();
+                                // Show success message
+                                // showNotification('Transaction deleted successfully', 'success');
+                            } else {
+                                throw new Error('Failed to delete transaction');
+                            }
+                        } catch (error) {
+                            console.error('Error deleting transaction:', error);
+                            // showNotification('Failed to delete transaction', 'error');
+                        }
+                    });
+                }
+            });
+        }
+
+        // // Initialize the table
+        // renderTransactions(all_txn);
     </script>
 
 <%- include('partials/footer'); -%>

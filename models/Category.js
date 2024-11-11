@@ -9,7 +9,8 @@ class Category extends BaseModel {
             ...baseAttr,
             name: {
                 type: DataTypes.TEXT,
-                allowNull: false
+                allowNull: false,
+                unique: true
             },
             is_public: {
                 type: DataTypes.BOOLEAN,

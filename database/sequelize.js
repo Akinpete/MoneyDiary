@@ -1,4 +1,4 @@
-import { Sequelize } from 'sequelize';
+import { Sequelize, Op } from 'sequelize';
 import pgvector from 'pgvector/sequelize';
 import config from '../config/database.js';  // Your config file
 

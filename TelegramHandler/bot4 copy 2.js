@@ -1,4 +1,5 @@
 import { Telegraf, Markup } from 'telegraf';
+import { Op } from 'sequelize';
 import dotenv from 'dotenv';
 import models from '../models/index.js';
 import * as transactionLoggerComposer from './tgcomposer.js';
@@ -134,27 +135,40 @@ class BotInstance {
                 }
             } else if (ctx.message.reply_to_message?.text === 'Please type your custom input below:') {
                 console.log(`Custom Category: ${messageText}`);
-                const newcategory = await models.Category.create({
+                const cat_search = await models.Category.findOne({
+                  where: {
+                    [Op.or]: [
+                      { name: messageText },  // Exact match
+                      { name: { [Op.iLike]: messageText } }  // Case-insensitive match (Postgres)
+                    ]
+                  }
+                });
+
+                if (cat_search && cat_search.length !== 0) {                
+                  const newcategory = await models.Category.create({
                     name: messageText,
                     user_id: user.id,
                     is_public: false
-                });
-                const newUsercategory = await models.UserCategory.create({ 
+                  });
+                  const newUsercategory = await models.UserCategory.create({ 
                     user_id: user.id,
                     category_id: newcategory.id
-                });
-                const response = await runcheck(transaction_text);
-                if (response) {
+                  });
+                  const response = await runcheck(transaction_text);
+                  if (response) {
                     const newTxn = await models.Transaction.create({
-                        transaction_text: response.text,
-                        transaction_type: response.type,
-                        amount: response.amount,
-                        recipient: response.recipient,
-                        user_id: user.id,
-                        usercategory_id: newUsercategory.id
-                    })
+                      transaction_text: response.text,
+                      transaction_type: response.type,
+                      amount: response.amount,
+                      recipient: response.recipient,
+                      user_id: user.id,
+                      usercategory_id: newUsercategory.id
+                    });
+                  }
+                  ctx.reply(`I have saved ${messageText} into your personal category list`);
+                } else {
+                  ctx.reply(`Error Saving Transaction: ${messageText} is already in the category list`);
                 }
-                ctx.reply(`I have saved ${messageText} into your personal category list`);
             }
         });
 

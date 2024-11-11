@@ -9,7 +9,7 @@ async function createInitialUser() {
         // });
         // console.log('New user created:', newUser);
         // const category_ids = [];
-        const categories = ["ounje", "groceries", "Black Tax", "Subscription", "Phone", "Data", "CREDIT ALERT"];
+        const categories = ["FOOD", "GROCERIES", "BLACK TAX", "SUBSCRIPTION", "PHONE", "DATA", "CREDIT ALERT"];
         for (const category of categories) {
             const newCategory = await models.Category.create({ 
                 name: category,
@@ -39,7 +39,12 @@ async function createInitialUser() {
         // });
         // console.log('New Txn created:', newEmbedding);
     } catch (error) {
-        console.error('Error creating user:', error);
+        if (error.name === 'SequelizeUniqueConstraintError') { 
+            console.warn('Category  already exists.'); 
+        } else { 
+            console.error('An error occurred:', error); 
+            throw error; // Re-throw the error to stop the program }
+        }
     }
 }
 

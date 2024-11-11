@@ -7,25 +7,27 @@
     <h1 class="text-2xl font-bold mb-4">Choose the categories for your transactions</h1>
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
         <% for (let i = 0; i < user_categories.length; i++) { %>
-            <button class="bg-gray-200 hover:bg-gray-300 rounded-md px-4 py-2"><%= user_categories[i].name %></button>
+            <button class="category-button bg-gray-200 hover:bg-custom-green-hover rounded-md px-4 py-2"><%= user_categories[i].name %></button>
         <% } %>
     </div>
     <div class="mt-4 text-right">
-        <button class="bg-custom-green-hover hover:bg-custom-green text-white rounded-md px-4 py-2">Submit</button>
+        <button id="submitButton" class="bg-gray-300 text-white font-bold py-2 px-4 rounded-md cursor-not-allowed">Submit</button>
     </div>
 </section>
 
 
-  <script>
-    const buttons = document.querySelectorAll('button');
-    const submitButton = document.querySelector('button.bg-custom-green-hover');
-    const selectedOptions = [];
+
+<script>
+    // Select all category buttons and the submit button
+    const buttons = document.querySelectorAll('.category-button');
+    const submitButton = document.getElementById('submitButton');
+    let selectedOptions = [];
 
     buttons.forEach((button) => {
         button.addEventListener('click', () => {
-            button.classList.toggle('bg-gray-300');
+            button.classList.toggle('bg-custom-green-hover');
             const option = button.textContent;
-            if (button.classList.contains('bg-gray-300')) {
+            if (button.classList.contains('bg-custom-green-hover')) {
                 selectedOptions.push(option);
             } else {
                 const index = selectedOptions.indexOf(option);
@@ -34,37 +36,54 @@
                 }
             }
             console.log(selectedOptions);
+            
+            // Enable or disable the submit button based on selectedOptions length
+            if (selectedOptions.length === 0) {
+                submitButton.disabled = true;
+                submitButton.classList.add('bg-gray-300', 'cursor-not-allowed');
+                submitButton.classList.remove('bg-custom-green');
+            } else {
+                submitButton.disabled = false;
+                submitButton.classList.remove('bg-gray-300', 'cursor-not-allowed');
+                submitButton.classList.add('bg-custom-green');
+            }
         });
     });
 
+    // Initially disable the submit button
+    submitButton.disabled = true;
+    submitButton.classList.add('bg-gray-300', 'cursor-not-allowed');
+
     submitButton.addEventListener('click', () => {
-    // Send the selected options to the backend
-    fetch('/categories', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(selectedOptions),
-    })
-        .then((response) => {
-        if (response.ok) {
-            // Redirect to the /home route
-            window.location.href = '/home';
-        } else {
-            return response.json();
+        if (!submitButton.disabled) {
+            // Send the selected options to the backend
+            fetch('/categories', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(selectedOptions),
+            })
+            .then((response) => {
+                if (response.ok) {
+                    // Redirect to the /home route
+                    window.location.href = '/home';
+                } else {
+                    return response.json();
+                }
+            })
+            .then((data) => {
+                if (data) {
+                    console.error('Error:', data);
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
         }
-        })
-        .then((data) => {
-        if (data) {
-            console.error('Error:', data);
-        }
-        })
-        .catch((error) => {
-        console.error('Error:', error);
-        });
     });
-    
-  </script>
+</script>
+
 
 
 <%- include('partials/footer'); -%>

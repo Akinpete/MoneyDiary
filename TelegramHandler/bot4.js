@@ -1,4 +1,5 @@
 import { Telegraf, Markup } from 'telegraf';
+import { Op } from 'sequelize';
 import dotenv from 'dotenv';
 import models from '../models/index.js';
 import * as transactionLoggerComposer from './tgcomposer.js';
@@ -49,13 +50,40 @@ class BotInstance {
         const isAuthed = await this.checkAuth(telegram_id);
         if (!isAuthed) {
             return ctx.replyWithMarkdown(
-                `You're not registered on the Platform`,
+                `You're not registered on the Platform
+Please don't use in-app browser to proceed
+
+-----------------------------------------------------
+Copy link to register below and paste on your browser`,
                 Markup.inlineKeyboard([
-                    [Markup.button.url('💬 Click to Register', 'https://cardinal-advanced-buffalo.ngrok-free.app')]
+                    [Markup.button.url('💬 Long Tap to copy link', 'https://cardinal-advanced-buffalo.ngrok-free.app')]
                 ])
             );
         }
         return next();
+    }
+
+    async maxEntry(ctx, next) {
+      const max_entry = process.env.MAX_ENTRY;
+      const telegram_id = ctx.from?.id;
+      const user = await models.User.findOne({ where: {telegram_id: telegram_id}});
+      let transactions;
+      if (user) {
+        transactions = await user.getTransactions();
+      }
+      if (transactions.length >= max_entry) {
+        return ctx.reply(
+          'For Now, You can Only Log 10 transactions',
+          {
+              reply_markup: {
+                  inline_keyboard: [[
+                      { text: '🔄 We will soon increase limit', callback_data: 'start' }
+                  ]]
+              }
+          }
+        );
+      }
+      return next();
     }
 
     async isvalidLog(ctx, text, next) {
@@ -99,23 +127,36 @@ class BotInstance {
 
         this.bot.command('logtransaction',
             async (ctx, next) => await this.requireAuth(ctx, next),
+            async (ctx, next) => await this.maxEntry(ctx, next),
             async(ctx) => {
                 ctx.reply('Log Your Transaction, Let\'s help you store them', {
                     reply_markup: {
                         force_reply: true,
-                        input_field_placeholder: 'Type up to 100 characters...'
+                        input_field_placeholder: 'Type up to 50 characters...'
                     }
                 });
             }
         )
+
+        this.bot.command('querytransaction',
+          async (ctx, next) => await this.requireAuth(ctx, next),
+          async(ctx) => {
+              ctx.reply('Ask AI what you want to know', {
+                  reply_markup: {
+                      force_reply: true,
+                      input_field_placeholder: 'Type up to 60 characters...'
+                  }
+              });
+          }
+      )
 
         this.bot.on('text', async (ctx) => {
             const messageText = ctx.message.text;
             const telegram_id = ctx.from?.id;
             const user = await models.User.findOne({ where: {telegram_id: telegram_id}});    
             if (ctx.message.reply_to_message?.text === 'Log Your Transaction, Let\'s help you store them') {
-                if (messageText.length > 100) {
-                    ctx.reply('Please limit your response to 100 characters.');                    
+                if (messageText.length > 50) {
+                    ctx.reply('Please limit your response to 50 characters.');                    
                 } else {
                     try {
                         await this.isvalidLog(ctx, messageText, async () => {
@@ -148,28 +189,80 @@ class BotInstance {
                 }
 
             } else if (ctx.message.reply_to_message?.text === 'Please type your custom input below:') {
-                console.log(`Custom Category: ${messageText}`);
+              console.log(`Custom Category: ${messageText}`);
+              // search for it in GENERAL category table
+              const cat_search = await models.Category.findOne({
+                where: {
+                  [Op.or]: [
+                    { name: messageText },  // Exact match
+                    { name: { [Op.iLike]: messageText } }  // Case-insensitive match (Postgres)
+                  ]
+                }
+              });
+              // console.log(cat_search.name);
+
+              // if not found at all in category table, create a new category
+
+              if (!cat_search) {
+                // console.log('I AM TAKING THIS ROUTE');             
                 const newcategory = await models.Category.create({
-                    name: messageText,
-                    user_id: user.id,
-                    is_public: false
+                  name: messageText.toUpperCase(),
+                  user_id: user.id,
+                  is_public: false
                 });
                 const newUsercategory = await models.UserCategory.create({ 
-                    user_id: user.id,
-                    category_id: newcategory.id
+                  user_id: user.id,
+                  category_id: newcategory.id
                 });
                 const response = await runcheck(transaction_text);
                 if (response) {
-                    const newTxn = await models.Transaction.create({
-                        transaction_text: response.text,
-                        transaction_type: response.type,
-                        amount: response.amount,
-                        recipient: response.recipient,
-                        user_id: user.id,
-                        usercategory_id: newUsercategory.id
-                    })
+                  const newTxn = await models.Transaction.create({
+                    transaction_text: response.text,
+                    transaction_type: response.type,
+                    amount: response.amount,
+                    recipient: response.recipient,
+                    user_id: user.id,
+                    usercategory_id: newUsercategory.id
+                  });
                 }
+                ctx.reply(`I have created and saved ${messageText} into your personal category list`);
+                await ctx.reply(`Transaction Saved`);
+                // if found in category table
+              } else {
+                // console.log('I AM TAKING the suPPOSED GOOD ROUTE');
+
+                // First check if user already has this category
+                const categoryExists = cpyUser_categories.some(category =>
+                  category.name.toUpperCase() === messageText.toUpperCase()
+                );
+
+                if (categoryExists) {
+                  ctx.reply(`Error Saving Transaction: ${messageText} is already in your category list`);
+                  return;
+                }
+
+                // If we get here, the category exists in main table but user doesn't have it yet
+                const newUsercategory = await models.UserCategory.create({ 
+                  user_id: user.id,
+                  category_id: cat_search.id
+                });
+
+                const response = await runcheck(transaction_text);
+                if (response) {
+                  const newTxn = await models.Transaction.create({
+                    transaction_text: response.text,
+                    transaction_type: response.type,
+                    amount: response.amount,
+                    recipient: response.recipient,
+                    user_id: user.id,
+                    usercategory_id: newUsercategory.id
+                  });
+                }
+
                 ctx.reply(`I have saved ${messageText} into your personal category list`);
+                await ctx.reply(`Transaction Saved`);
+                return;
+              }
             }
         });
 
@@ -192,26 +285,40 @@ class BotInstance {
                 });
             } else {
                 const parsed_selectedOption = selectedOption.replace('_', ' ').toUpperCase();
-                await ctx.reply(`You selected: ${parsed_selectedOption}`);
                 const index = parseInt(parsed_selectedOption[parsed_selectedOption.length - 1]) - 1;
-                let selected_category;
+                const selected_category = cpyUser_categories[index];
+                await ctx.reply(`You selected: ${selected_category.name}`);
+                
                 if (!isNaN(index)) {
-                    selected_category = cpyUser_categories[index];
+                  let response_type;
+                    // selected_category = cpyUser_categories[index];
                     const usercategory = await models.UserCategory.findOne({ where: { category_id: selected_category.id }});
                     const response = await runcheck(transaction_text);
                     if (response) {
+                      if ((selected_category.name.toUpperCase()) === "CREDIT ALERT") {
+                        response_type = 'credit';
+                      } else {
+                        response_type = 'debit';
+                      }
+                      try {
                         await models.Transaction.create({
-                            transaction_text: response.text,
-                            transaction_type: response.type,
-                            amount: response.amount,
-                            recipient: response.recipient,
-                            user_id: user.id,
-                            usercategory_id: usercategory.id
+                          transaction_text: response.text,
+                          transaction_type: response_type,
+                          amount: response.amount,
+                          recipient: response.recipient,
+                          user_id: user.id,
+                          usercategory_id: usercategory.id
                         });
+
+                        await ctx.reply(`Transaction Saved`);
+                      } catch (error) {
+                        console.error('Error creating Transaction', error);
+                      }
+              
                     }                   
 
                 } 
-                await ctx.reply(`You selected: ${parsed_selectedOption}`);
+                
 
             }
 
