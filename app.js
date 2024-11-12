@@ -1,4 +1,3 @@
-// src/index.js
 import dotenv from 'dotenv';
 dotenv.config();
 import express from 'express';
@@ -11,8 +10,8 @@ import BotInstance from './TelegramHandler/bot4.js';
 import * as total_txn from './utils/total_transactions.js';
 import txnRoutes from './routes/txnRouter.js';
 import categoryRoutes from './routes/categoryRouter.js';
-import { setDefaultResultOrder } from "node:dns";
-setDefaultResultOrder("ipv4first");
+// import { setDefaultResultOrder } from "node:dns";
+// setDefaultResultOrder("ipv4first");
 
 
 const app = express();

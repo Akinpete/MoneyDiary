@@ -372,12 +372,28 @@ Copy link to register below and paste on your browser`,
                     console.log(`CTX STATE: ${queryResponse.context}`)
                     if (queryResponse) {
                       const add_data = cleanObject(queryResponse);
+                      let start_date;
+                      let end_date;
+                      if (!add_data.date.date2) {
+                        const date2 = new Date().toISOString();
+                        end_date = date2;
+                        start_date = add_data.date.date1;
+                      } else {
+                        start_date = add_data.date.date1;
+                        end_date = add_data.date.date2;
+                      }
+                      console.log(add_data);
                       const combinedText = messageText + ' ' + JSON.stringify(add_data);
                       const query_embed = await get_embeddings(combinedText);
 
                       if (query_embed) {
                         const items = await models.Embedding.findAll({
                           order: cosineDistance('data', query_embed, sequelize),
+                          where: {
+                            created_at: {
+                              [Op.between]: [start_date, end_date]
+                            }
+                          },
                           limit: 20
                         });
 
@@ -402,6 +418,7 @@ Copy link to register below and paste on your browser`,
                           if (txns.length !== 0) {
                             for (const txn of txns) {
                               transaction_details = {
+                                date_created: txn.created_at,
                                 transaction_text: txn.transaction_text,
                                 transaction_type: txn.transaction_type,
                                 amount: txn.amount,
@@ -413,18 +430,12 @@ Copy link to register below and paste on your browser`,
                             if (Txn_details.length !== 0) {
                               const reply = await generate_reply(messageText, JSON.stringify(Txn_details));
                               ctx.reply(reply);
-                            }                          
-
-                          }
-
-                        } else {
+                            }                        
+                          }                        } else {
                           console.log('I TRIED MY BEST');
                         }
                       }
-
-                    }
-
-                    
+                    }                    
                   })
                 } catch (error) {
                   console.error('Error in validating query:', error);
