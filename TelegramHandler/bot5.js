@@ -377,7 +377,7 @@ Copy link to register below and paste on your browser`,
                       let end_date;
                       if (!add_data.date.date2) {
                         const date1 = new Date(add_data.date.date1);
-                        start_date = new Date(date1.setHours(0, 0, 0, 0)); // Beginning of day
+                        start_date = new Date(Date.UTC(date1.getUTCFullYear(), date1.getUTCMonth(), date1.getUTCDate(), 0, 0, 0, 0));
                         end_date = new Date(date1.setHours(23, 59, 59, 999));
                       } else {
                         start_date = new Date(add_data.date.date1.setHours(0, 0, 0, 0));
@@ -386,6 +386,10 @@ Copy link to register below and paste on your browser`,
                       console.log(add_data);
                       console.log('Start date:', start_date);
                       console.log('End date:', end_date);
+                      if (!start_date) {
+                        ctx.reply('Please try again');
+                        return;
+                      }
                       const combinedText = `${messageText} ${JSON.stringify(add_data)}`;
                       const query_embed = await get_embeddings(combinedText);
                       let items;
@@ -407,50 +411,44 @@ Copy link to register below and paste on your browser`,
                             limit: 20
                           });
                         }
-                        
 
-                        if (items && items.length !== 0) {
-                          const validTxnid = [];
-                          items.forEach(instance => { 
-                            console.log(instance.transaction_id);
-                            validTxnid.push(instance.transaction_id);
-                          });
-                          const txns = [];
-                          for (const id of validTxnid) {
-                            const Txn = await models.Transaction.findOne({ 
-                              where: { 
-                                id: id,
-                                user_id: user.id
-                              }
-                            });
-                            txns.push(Txn); // Add each transaction to the array
+                        if(items && items.length !== 0) {
+                          const validTxnid = items.map(instance => instance.transaction_id);
+                          //Fetch all trasactions in parallel using Promise.all
+                          const txns = await Promise.all(
+                            validTxnid.map(id =>
+                              models.Transaction.findOne({
+                                where: {
+                                  id: id,
+                                  user_id: user.id
+                                }
+                              })
+                            )
+                          );
+
+                          // Filter out any null transactions
+                          const validTxns = txns.filter(txn=> txn !== null);
+
+                          const Txn_details = validTxns.map(txn => ({
+                            date_created: txn.created_at,
+                            transaction_text: txn.transaction_text,
+                            transaction_type: txn.transaction_type,
+                            amount: txn.amount,
+                            recipient: txn.recipient
+                          }));
+
+                          if (Txn_details.length !== 0) {
+                            const reply = await generate_reply(messageText, JSON.stringify(Txn_details));
+                            await ctx.reply(reply);
+                          } else {
+                            await ctx.reply('No match!');
                           }
-                          
-                          const Txn_details = [];
-                          let transaction_details;
-                          if (txns && txns.length !== 0) {
-                            for (const txn of txns) {
-                              transaction_details = {
-                                date_created: txn.created_at,
-                                transaction_text: txn.transaction_text,
-                                transaction_type: txn.transaction_type,
-                                amount: txn.amount,
-                                recipient: txn.recipient
-                              }
-                              Txn_details.push(transaction_details);                              
-                            }
-
-                            if (Txn_details.length !== 0) {
-                              const reply = await generate_reply(messageText, JSON.stringify(Txn_details));
-                              await ctx.reply(reply);
-                            }                        
-                          }                        
                         } else {
                           console.log('I TRIED MY BEST');
                           if (items.length === 0) {
-                            await ctx.reply('No match!');
-                          }                          
-                        }
+                            await ctx.reply('No match!')
+                          }
+                        }                        
                       }
                     }                    
                   })

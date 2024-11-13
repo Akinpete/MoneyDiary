@@ -6,7 +6,7 @@ import initializeDatabase from './index.js';
 import models from './models/index.js';
 import authRoutes from './routes/authRouter.js';
 import authenticateToken from './middleware/protected.js';
-import BotInstance from './TelegramHandler/bot4.js';
+import BotInstance from './TelegramHandler/bot5.js';
 import * as total_txn from './utils/total_transactions.js';
 import txnRoutes from './routes/txnRouter.js';
 import categoryRoutes from './routes/categoryRouter.js';

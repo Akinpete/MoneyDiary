@@ -23,6 +23,13 @@ class Embedding extends BaseModel {
       }
     }, {
       sequelize,
+      indexes: [
+        {
+          fields: ['data'],
+          using: 'hnsw',
+          operator: 'vector_cosine_ops'
+        }
+      ],
       modelName: 'Embedding',
       timestamps: false,
       freezeTableName: true
