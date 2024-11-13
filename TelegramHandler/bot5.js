@@ -386,8 +386,9 @@ Copy link to register below and paste on your browser`,
                       console.log(add_data);
                       console.log('Start date:', start_date);
                       console.log('End date:', end_date);
-                      if (!start_date) {
-                        ctx.reply('Please try again');
+                      // if dates are invalid & asking_time is absent
+                      if ((isNaN(start_date.getTime())) && (add_data.date.asking_time ==="" || !add_data.date.asking_time )) {
+                        ctx.reply('Please try again or Reword your query');
                         return;
                       }
                       const combinedText = `${messageText} ${JSON.stringify(add_data)}`;

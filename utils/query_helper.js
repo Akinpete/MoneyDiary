@@ -35,7 +35,7 @@ export async function runcheckQuery(prompt) {
 "You are an assistant designed to retrieve transaction details from prompts. Use today’s date as the reference and follow all instructions carefully to extract transaction data accurately."
 Date Extraction Rules:
 
-"Note today’s date as ${date_today}. Parse for any specific dates or relative time indicators in the prompt (like 'yesterday,' '2 weeks ago,' etc.). If found, convert these relative terms into ISO date format (YYYY-MM-DDTHH:mm:ss.sssZ - with hours,min,seconds still intact) based on today’s date. You may retrieve a maximum of two dates, labeled date1 and date2. If there are no dates, leave all values empty."
+"Note today’s date as ${date_today}. Parse for any specific dates or relative time indicators in the prompt (like 'yesterday,' '2 weeks ago,' etc.). If found, convert these relative terms into ISO date format (YYYY-MM-DDTHH:mm:ss.sssZ - with hours,min,seconds still intact) based on today’s date. You may retrieve a maximum of two dates, labeled date1 and date2. If there are no dates, leave all values empty. Extract the name of things that was bought or name of people, usually just proper nouns from the prompt and add them to 'names' "
 Validation:
 
 "Only extract data if the prompt logically pertains to a financial transaction or question (e.g., a query that someone might record in a transaction diary). If not, leave all fields empty. Do not create any data not explicitly stated in the prompt. Most times, the prompt come as a request. Use this to acknowledge if 'context' is valid. If it is a financial transaction record question, Please add the context. 'asking_time' returns empty value normally, EXCEPT if the prompt meaning is about asking for the time a transaction happen, then return 'yes'"
@@ -112,7 +112,7 @@ export async function generate_reply(question, data) {
 
 
 
-const response = await runcheckQuery('List my transaction');
+const response = await runcheckQuery('List my transaction for today');
 console.log(response);
 
 // Be strict with this prompt handling. The prompt is like an entry in a transactions diary, so act on behalf of the personal as personal book keeper and accountant (first, guess where money is coming from and where it is headed. If money is coming out of the account of the owner of the diary, it is a debit transaction, if money is entering the account of the owner of the transaction diary, it is a 'credit' transaction). Extract the transaction data from the prompt. Add empty value (don't write anything) if something is not specified or the prompt doesn't make financial, logical sense and doesn't relate to transaction records! Parse and reword prompt for easy logging to a vector database and send back as text. add empty value to 'recipient' if transaction data denotes POS or ATM withdrawal, at best, add empty value if it has POS/ATM at all. ONLY 'credit' transaction prompt should have 'me' as recipient. You are professional book keeper and accountant, you can't add data to the transaction details or remove from it. It can cause bankruptcy and that is bad for business. Send empty values if you are told to formulate transaction or bring in whatever that is not in the prompt.  If the prompt denote an expense with 'recipient' tag being empty, tag recipient to be 'vendor', else make recipient an empty value. Utterly reject a prompt with 'POS' or 'ATM' in it
