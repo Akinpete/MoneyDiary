@@ -15,7 +15,7 @@ class User extends BaseModel {
             unique: true
         },
         telegram_id: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.BIGINT,
             allowNull: false,
             unique: true
         },
