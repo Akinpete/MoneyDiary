@@ -24,9 +24,13 @@ const DataFormat = z.object({
     context: z.string().describe("Additional context that might be helpfulor like summary if valid")
 });
 
-const date_today = new Date().toISOString();
+// const date_today = new Date().toISOString();
+function getCurrentDate() {
+    return new Date().toISOString();
+}
 
 export async function runcheckQuery(prompt) {
+    const date_today = getCurrentDate();
     const completion = await openai.beta.chat.completions.parse({
         model: 'gpt-4o-2024-08-06',
         messages: [
@@ -41,7 +45,9 @@ Validation:
 "Only extract data if the prompt logically pertains to a financial transaction or question (e.g., a query that someone might record in a transaction diary). If not, leave all fields empty. Do not create any data not explicitly stated in the prompt. Most times, the prompt come as a request. Use this to acknowledge if 'context' is valid. If it is a financial transaction record question, Please add the context. 'asking_time' returns empty value normally, EXCEPT if the prompt meaning is about asking for the time a transaction happen, then return 'yes'"
 Expected Output Structure:
 
-"Return the data in the  format described (fill with an empty string '' if data is missing or if the prompt is invalid) `},
+"Return the data in the  format described (fill with an empty string '' if data is missing or if the prompt is invalid) 
+"For the context, express the date in datestring, and derive it implicitly from the date_today variable.`}
+,
             { role: "user", content: `${prompt}` }
         ],
         response_format: zodResponseFormat(DataFormat, "Data_format"),
