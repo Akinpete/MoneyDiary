@@ -439,7 +439,7 @@ Copy link to register below and paste on your browser`,
                           }));
 
                           if (Txn_details.length !== 0) {
-                            const reply = await generate_reply(messageText, JSON.stringify(Txn_details));
+                            const reply = await generate_reply(add_data.context, JSON.stringify(Txn_details));
                             await ctx.reply(reply);
                           } else {
                             await ctx.reply('No match!');
