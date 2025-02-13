@@ -151,7 +151,7 @@ app.get('/tos', async (req, res) => {
     });
 });
 
-app.post('/data_deletion', (req, res) => {
+app.post('/data_deletion', async (req, res) => {
     const signedRequest = req.body.signed_request;
     if (!signedRequest) {
       return res.status(400).json({ error: 'signed_request parameter missing' });
@@ -162,17 +162,32 @@ app.post('/data_deletion', (req, res) => {
       return res.status(400).json({ error: 'Invalid signed_request' });
     }
   
-    const userId = data.user_id; // Retrieved user ID from the parsed data
+    const user_id = data.user_id; // Retrieved user ID from the parsed data
     console.log('Data deletion requested for user:', userId);
-  
-    // Prepare deletion response data
-    const confirmationCode = MetaDelete.generateRandomCode(6); // Unique code for the deletion request  
-    const statusUrl = `https://cardinal-advanced-buffalo.ngrok-free.app/deletion?id=${confirmationCode}`; // URL to track the deletion
+
+    try {
+        // Example: Delete user's related data (customize as needed)
+        await Promise.all([
+          models.Transaction.destroy({ where: { user_id } }),
+          // Add other models as required.
+        ]);
     
-    res.json({
-      url: statusUrl,
-      confirmation_code: confirmationCode
-    });
+        // Optionally, you could also delete the user record:
+        // await User.destroy({ where: { id: userId } });
+    
+        // Prepare deletion response data
+        const confirmationCode = MetaDelete.generateRandomCode(6); // Unique code for the deletion request  
+        const statusUrl = `https://cardinal-advanced-buffalo.ngrok-free.app/deletion?id=${confirmationCode}`; // URL to track the deletion
+    
+        return res.json({
+          url: statusUrl,
+          confirmation_code: confirmationCode
+        });
+      } catch (error) {
+        console.error('Error during data deletion:', error);
+        return res.status(500).json({ error: 'Server error during data deletion.' });
+      }
+
 });
 
 app.get('/deletion', (req, res) => {
