@@ -14,11 +14,16 @@ class User extends BaseModel {
             allowNull: false,
             unique: true
         },
-        telegram_id: {
+        whatsapp_number: {
             type: DataTypes.BIGINT,
-            allowNull: false,
+            allowNull: true,
             unique: true
         },
+        telegram_id: {
+          type: DataTypes.BIGINT,
+          allowNull: false,
+          unique: true
+      },
         photo_url: { 
           type: DataTypes.STRING, 
           allowNull: true, 
@@ -36,7 +41,7 @@ class User extends BaseModel {
         currency: {
             type: DataTypes.STRING,
             allowNull: true
-        }      
+        }    
     }, {
       sequelize,
       timestamps: true,

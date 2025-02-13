@@ -10,6 +10,8 @@ import BotInstance from './TelegramHandler/bot5.js';
 import * as total_txn from './utils/total_transactions.js';
 import txnRoutes from './routes/txnRouter.js';
 import categoryRoutes from './routes/categoryRouter.js';
+import waRoutes from './routes/whatsappRouter.js';
+import * as MetaDelete from './middleware/meta_delete.js';
 // import { setDefaultResultOrder } from "node:dns";
 // setDefaultResultOrder("ipv4first");
 
@@ -23,6 +25,8 @@ const PORT = process.env.PORT;
 app.use(express.static('public'));
 app.use(cookieParser());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 
 
 //view engine
@@ -133,7 +137,74 @@ app.get('/home', authenticateToken, async (req, res) => {
         res.status(404).send('User not found'); 
     } 
 });
+app.get('/privacy', async (req, res) => {
+    res.render('privacy_policy', {
+        effectiveDate: 'February 12, 2025', 
+        contactEmail: 'admin@moniediary.com'
+    });
+});
+
+app.get('/tos', async (req, res) => {
+    res.render('tos', {
+        effectiveDate: 'February 12, 2025', 
+        contactEmail: 'admin@moniediary.com'
+    });
+});
+
+app.post('/data_deletion', async (req, res) => {
+    const signedRequest = req.body.signed_request;
+    if (!signedRequest) {
+      return res.status(400).json({ error: 'signed_request parameter missing' });
+    }
+  
+    const data = MetaDelete.parseSignedRequest(signedRequest);
+    if (!data) {
+      return res.status(400).json({ error: 'Invalid signed_request' });
+    }
+  
+    const user_id = data.user_id; // Retrieved user ID from the parsed data
+    console.log('Data deletion requested for user:', userId);
+
+    try {
+        // Example: Delete user's related data (customize as needed)
+        await Promise.all([
+          models.Transaction.destroy({ where: { user_id } }),
+          // Add other models as required.
+        ]);
+    
+        // Optionally, you could also delete the user record:
+        // await User.destroy({ where: { id: userId } });
+    
+        // Prepare deletion response data
+        const confirmationCode = MetaDelete.generateRandomCode(6); // Unique code for the deletion request  
+        const statusUrl = `https://cardinal-advanced-buffalo.ngrok-free.app/deletion?id=${confirmationCode}`; // URL to track the deletion
+    
+        return res.json({
+          url: statusUrl,
+          confirmation_code: confirmationCode
+        });
+      } catch (error) {
+        console.error('Error during data deletion:', error);
+        return res.status(500).json({ error: 'Server error during data deletion.' });
+      }
+
+});
+
+app.get('/deletion', (req, res) => {
+    // Extract the confirmation code from the query parameters.
+    const confirmationCode = req.query.id;
+  
+    if (!confirmationCode) {
+      return res.status(400).send('Missing confirmation code.');
+    }
+  
+    // Render the delete.ejs view with the confirmation code
+    res.render('deleted', { confirmationCode });
+  });
+
+
 app.use(authRoutes);
+app.use(waRoutes);
 app.use(txnRoutes);
 app.use(categoryRoutes);
 
