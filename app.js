@@ -10,6 +10,7 @@ import BotInstance from './TelegramHandler/bot5.js';
 import * as total_txn from './utils/total_transactions.js';
 import txnRoutes from './routes/txnRouter.js';
 import categoryRoutes from './routes/categoryRouter.js';
+import * as MetaDelete from './middleware/meta_delete.js';
 // import { setDefaultResultOrder } from "node:dns";
 // setDefaultResultOrder("ipv4first");
 
@@ -23,6 +24,8 @@ const PORT = process.env.PORT;
 app.use(express.static('public'));
 app.use(cookieParser());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 
 
 //view engine
@@ -133,6 +136,20 @@ app.get('/home', authenticateToken, async (req, res) => {
         res.status(404).send('User not found'); 
     } 
 });
+app.get('/privacy', async (req, res) => {
+    res.render('privacy_policy', {
+        effectiveDate: 'February 12, 2025', 
+        contactEmail: 'admin@moniediary.com'
+    });
+});
+app.post('/delete_data', async (req, res) => {
+    const signedRequest = req.body.signed_request
+    const secret = process.env.APP_SECRET;  
+
+
+});
+
+
 app.use(authRoutes);
 app.use(txnRoutes);
 app.use(categoryRoutes);

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MoneyDiary - Add WhatsApp</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'custom-green': '#1B352B',
+            'custom-green-hover': '#2ec61c'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gradient-to-b from-blue-50 to-white">
+  <!-- Mobile Header -->
+  <header class="lg:hidden flex justify-between items-center p-4 bg-white border-b">
+    <button class="text-2xl" id="mobileMenuBtn">
+      <i class="fas fa-bars"></i>
+    </button>
+    <h1 class="text-xl font-semibold">Add WhatsApp</h1>
+    <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+      <img src="<%= photo_url %>" alt="PA" class="w-full h-full object-cover rounded-full">
+    </div>
+  </header>
+
+  <div class="flex h-screen">
+    <!-- Sidebar - hidden on mobile by default -->
+    <aside id="sidebar" class="hidden lg:block w-64 bg-custom-green text-white fixed lg:relative h-full z-50">
+      <div class="p-6">
+        <a href="/">
+          <div class="text-white font-bold text-2xl">MoneyDiary</div>
+        </a>
+        <nav class="space-y-4 mt-6">
+          <a href="/home" class="flex items-center space-x-3 text-white hover:text-custom-green-hover">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+          </a>
+          <a href="/transactions" class="flex items-center space-x-3 text-white hover:text-custom-green-hover">
+            <i class="fas fa-exchange-alt"></i>
+            <span>All Transactions</span>
+          </a>
+          <a href="#" class="flex items-center space-x-3 text-gray-300 hover:text-white">
+            <i class="fas fa-users"></i>
+            <span>Recipients</span>
+          </a>
+          <a href="/logout" class="flex items-center space-x-3 bg-red-500 hover:bg-red-900 p-2 rounded-md text-white hover:text-red-300">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+          </a>
+          <a href="/whatsapp" class="flex items-center space-x-3 bg-white hover:bg-custom-green p-2 rounded-md text-white hover:text-red-300">
+            <i class="fas fa-paper-plane"></i>
+            <span>Add Whatsapp</span>
+          </a>
+        </nav>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-4 lg:p-8 overflow-y-auto">
+      <div class="mb-6">
+        <h1 class="text-xl font-semibold mb-2">Add Your WhatsApp Number</h1>
+      </div>
+      <!-- WhatsApp Number Form -->
+      <form id="whatsappForm" class="max-w-md" method="POST" action="/whatsapp">
+        <div class="mb-4">
+          <label for="whatsappNumber" class="block text-gray-700 font-medium">WhatsApp Number</label>
+          <input
+            type="text"
+            name="whatsappNumber"
+            id="whatsappNumber"
+            placeholder="Enter your WhatsApp number"
+            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-custom-green focus:border-custom-green">
+        </div>
+        <button type="submit" class="bg-custom-green text-white px-4 py-2 rounded-md hover:bg-custom-green-hover">
+          Add WhatsApp
+        </button>
+      </form>
+
+      <!-- Error Container -->
+      <div id="errorContainer" class="mt-4 text-red-600"></div>
+
+      <!-- Go Home Button (hidden until success) -->
+      <div id="goHomeContainer" class="mt-4 hidden">
+        <a href="/home" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
+          Go to Home
+        </a>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Mobile menu toggle
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const sidebar = document.getElementById('sidebar');
+    mobileMenuBtn.addEventListener('click', () => {
+      sidebar.classList.toggle('hidden');
+    });
+
+    // Form submission handling
+    document.getElementById('whatsappForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const errorContainer = document.getElementById('errorContainer');
+      const goHomeContainer = document.getElementById('goHomeContainer');
+      errorContainer.textContent = ''; // clear previous errors
+
+      const whatsappNumber = document.getElementById('whatsappNumber').value.trim();
+      if (!whatsappNumber) {
+        errorContainer.textContent = 'Please enter your WhatsApp number.';
+        return;
+      }
+
+      try {
+        const response = await fetch('/whatsapp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ whatsappNumber })
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          // Display server validation errors if any
+          errorContainer.textContent = result.error || 'An error occurred. Please try again.';
+        } else {
+          // On successful validation, hide the form and show the "Go to Home" button
+          document.getElementById('whatsappForm').classList.add('hidden');
+          goHomeContainer.classList.remove('hidden');
+        }
+      } catch (error) {
+        errorContainer.textContent = 'An unexpected error occurred. Please try again.';
+      }
+    });
+  </script>
+
+  <%- include('partials/footer'); -%>
+</body>
+</html>
