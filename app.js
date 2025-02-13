@@ -143,12 +143,49 @@ app.get('/privacy', async (req, res) => {
         contactEmail: 'admin@moniediary.com'
     });
 });
-app.post('/delete_data', async (req, res) => {
-    const signedRequest = req.body.signed_request
-    const secret = process.env.APP_SECRET;  
 
-
+app.get('/tos', async (req, res) => {
+    res.render('tos', {
+        effectiveDate: 'February 12, 2025', 
+        contactEmail: 'admin@moniediary.com'
+    });
 });
+
+app.post('/data_deletion', (req, res) => {
+    const signedRequest = req.body.signed_request;
+    if (!signedRequest) {
+      return res.status(400).json({ error: 'signed_request parameter missing' });
+    }
+  
+    const data = MetaDelete.parseSignedRequest(signedRequest);
+    if (!data) {
+      return res.status(400).json({ error: 'Invalid signed_request' });
+    }
+  
+    const userId = data.user_id; // Retrieved user ID from the parsed data
+    console.log('Data deletion requested for user:', userId);
+  
+    // Prepare deletion response data
+    const confirmationCode = MetaDelete.generateRandomCode(6); // Unique code for the deletion request  
+    const statusUrl = `https://cardinal-advanced-buffalo.ngrok-free.app/deletion?id=${confirmationCode}`; // URL to track the deletion
+    
+    res.json({
+      url: statusUrl,
+      confirmation_code: confirmationCode
+    });
+});
+
+app.get('/deletion', (req, res) => {
+    // Extract the confirmation code from the query parameters.
+    const confirmationCode = req.query.id;
+  
+    if (!confirmationCode) {
+      return res.status(400).send('Missing confirmation code.');
+    }
+  
+    // Render the delete.ejs view with the confirmation code
+    res.render('deleted', { confirmationCode });
+  });
 
 
 app.use(authRoutes);

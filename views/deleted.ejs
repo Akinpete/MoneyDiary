@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MoneyDiary - Data Deletion Confirmation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'custom-green': '#1B352B',
+            'custom-green-hover': '#2ec61c'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gradient-to-b from-blue-50 to-white">
+  <!-- Mobile Header -->
+  <header class="lg:hidden flex justify-between items-center p-4 bg-white border-b">
+    <h1 class="text-xl font-semibold">Data Deletion</h1>
+  </header>
+
+  <!-- For larger screens, you might want to show a sidebar or a simplified header -->
+  <div class="flex flex-col items-center justify-center h-screen">
+    <div class="bg-white rounded-xl p-8 shadow-md text-center max-w-md">
+      <h2 class="text-2xl font-bold mb-4">Data Deletion Request Processed</h2>
+      <p class="mb-2">Your request to delete your data has been successfully processed.</p>
+      <p class="mb-6">
+        Confirmation Code: 
+        <span class="font-semibold"><%= confirmationCode %></span>
+      </p>
+      <a href="/home" class="bg-custom-green text-white px-4 py-2 rounded-md hover:bg-custom-green-hover">
+        Return to Home
+      </a>
+    </div>
+  </div>
+
+  <%- include('partials/footer'); -%>
+</body>
+</html>
