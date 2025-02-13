@@ -10,6 +10,7 @@ import BotInstance from './TelegramHandler/bot5.js';
 import * as total_txn from './utils/total_transactions.js';
 import txnRoutes from './routes/txnRouter.js';
 import categoryRoutes from './routes/categoryRouter.js';
+import waRoutes from './routes/whatsappRouter.js';
 import * as MetaDelete from './middleware/meta_delete.js';
 // import { setDefaultResultOrder } from "node:dns";
 // setDefaultResultOrder("ipv4first");
@@ -151,6 +152,7 @@ app.post('/delete_data', async (req, res) => {
 
 
 app.use(authRoutes);
+app.use(waRoutes);
 app.use(txnRoutes);
 app.use(categoryRoutes);
 

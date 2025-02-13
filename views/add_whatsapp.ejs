@@ -55,10 +55,10 @@
             <i class="fas fa-sign-out-alt"></i>
             <span>Logout</span>
           </a>
-          <a href="/whatsapp" class="flex items-center space-x-3 bg-white hover:bg-custom-green p-2 rounded-md text-white hover:text-red-300">
+          <a href="/whatsapp" class="flex items-center space-x-3 bg-white hover:bg-custom-green p-2 rounded-md text-green-600 hover:text-white">
             <i class="fas fa-paper-plane"></i>
-            <span>Add Whatsapp</span>
-          </a>
+            <span>Connect Whatsapp</span>
+        </a>
         </nav>
       </div>
     </aside>
@@ -72,12 +72,17 @@
       <form id="whatsappForm" class="max-w-md" method="POST" action="/whatsapp">
         <div class="mb-4">
           <label for="whatsappNumber" class="block text-gray-700 font-medium">WhatsApp Number</label>
-          <input
-            type="text"
-            name="whatsappNumber"
-            id="whatsappNumber"
-            placeholder="Enter your WhatsApp number"
-            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-custom-green focus:border-custom-green">
+          <div class="mt-1 flex rounded-md shadow-sm">
+            <!-- Fixed country code -->
+            <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 select-none">+234</span>
+            <!-- Editable remainder of the phone number -->
+            <input
+              type="text"
+              name="whatsappNumber"
+              id="whatsappNumber"
+              placeholder="Enter your WhatsApp number"
+              class="flex-1 block w-full min-w-0 rounded-none rounded-r-md sm:text-sm border border-gray-300 focus:outline-none focus:ring-custom-green focus:border-custom-green">
+          </div>
         </div>
         <button type="submit" class="bg-custom-green text-white px-4 py-2 rounded-md hover:bg-custom-green-hover">
           Add WhatsApp
@@ -111,19 +116,24 @@
       const goHomeContainer = document.getElementById('goHomeContainer');
       errorContainer.textContent = ''; // clear previous errors
 
-      const whatsappNumber = document.getElementById('whatsappNumber').value.trim();
-      if (!whatsappNumber) {
+      // Grab the user input (the country code is constant)
+      const phoneNumber = document.getElementById('whatsappNumber').value.trim();
+      if (!phoneNumber) {
         errorContainer.textContent = 'Please enter your WhatsApp number.';
         return;
       }
 
       try {
+        // Send both the fixed country code and the phone number to the server.
         const response = await fetch('/whatsapp', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ whatsappNumber })
+          body: JSON.stringify({ 
+            countryCode: '+234', // Constant country code
+            whatsappNumber: phoneNumber 
+          })
         });
         const result = await response.json();
         if (!response.ok) {
