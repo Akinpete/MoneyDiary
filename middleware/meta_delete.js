@@ -1,18 +1,36 @@
 import crypto from 'crypto';
 
-export function parseSignedRequest(signedRequest, secret) {
-    const [encodedSig, payload] = signedRequest.split('.');
-    
-    const sig = Buffer.from(encodedSig, 'base64');
-    const data = JSON.parse(Buffer.from(payload, 'base64').toString('utf8'));
-
-    const expectedSig = crypto.createHmac('sha256', secret).update(payload).digest();
-
-    if (!crypto.timingSafeEqual(sig, expectedSig)) {
-        console.error('Bad Signed JSON signature!');
-        return null;
+export function parseSignedRequest(signedRequest) {
+    const parts = signedRequest.split('.', 2);
+    if (parts.length !== 2) {
+      console.error('Invalid signed request format');
+      return null;
     }
-
+    
+    const [encodedSig, payload] = parts;
+    const sig = base64UrlDecode(encodedSig);
+    const payloadBuffer = base64UrlDecode(payload);
+    
+    let data;
+    try {
+      data = JSON.parse(payloadBuffer.toString('utf8'));
+    } catch (err) {
+      console.error('Error parsing JSON payload:', err);
+      return null;
+    }
+    
+    // Compute expected signature using HMAC SHA-256
+    const expectedSig = crypto
+      .createHmac('sha256', appSecret)
+      .update(payload)
+      .digest();
+  
+    // Use timingSafeEqual to avoid timing attacks
+    if (!crypto.timingSafeEqual(sig, expectedSig)) {
+      console.error('Bad Signed JSON signature!');
+      return null;
+    }
+    
     return data;
 }
 
@@ -24,6 +42,11 @@ export function generateRandomCode(length) {
 
 
 export function base64UrlDecode(input) {
-    return Buffer.from(input.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8');
+    // Replace URL-specific characters and add padding if needed
+    let base64 = input.replace(/-/g, '+').replace(/_/g, '/');
+    while (base64.length % 4) {
+      base64 += '=';
+    }
+    return Buffer.from(base64, 'base64');
 }
 
