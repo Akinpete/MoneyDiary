@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  app:
+    build: .  # Build your application image
+    depends_on:
+      - redis
+      - postgres
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=development
+      - DB_USERNAME=${DB_USERNAME}  # Custom username
+      - DB_PASSWORD=${DB_PASSWORD}  # Custom password
+      - DB_NAME=${DB_NAME}          # Custom database name
+      - DB_HOST=postgres            # Service name for Docker networking
+      - DB_PORT=${DB_PORT}          # Default PostgreSQL port
+      - RUN_UNDO=true
+    ports:
+      - "8445:5000"
+    restart: unless-stopped
+    mem_limit: 2g
+    cpus: '1'
+    entrypoint: ["/usr/local/bin/entrypoint.sh"]
+    command: ["node", "app.js"]
+
+  postgres:
+    # Use the custom image built from the Dockerfile.postgres
+    build:
+      context: .
+      dockerfile: Dockerfile.postgres
+    container_name: postgres
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}         # For the default PostgreSQL superuser
+      POSTGRES_DB: postgres_db                   # Default database (set to a dummy value or as needed)
+      DB_USERNAME: ${DB_USERNAME}                # Pass custom env vars to init.sh
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sh:/docker-entrypoint-initdb.d/init.sh  # Mount your initialization script
+    restart: unless-stopped
+    mem_limit: 3g
+    cpus: '1.5'
+
+volumes:
+  postgres_data:
+
