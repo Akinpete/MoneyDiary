@@ -20,7 +20,6 @@ services:
     restart: unless-stopped
     mem_limit: 2g
     cpus: '1'
-    entrypoint: [exec "$@"]
     command: ["node", "app.js"]
 
   postgres:
